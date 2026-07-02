@@ -1,7 +1,7 @@
-import { useAtomValue } from "@effect/atom-react";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@sparstrategi/ui/components/button";
-import { Share2Icon } from "lucide-react";
+import { SaveIcon, Share2Icon } from "lucide-react";
 import { toast } from "sonner";
 
 import { AllocationChart } from "@/components/simulator/allocation-chart";
@@ -13,6 +13,7 @@ import { ProjectionChart } from "@/components/simulator/projection-chart";
 import { ProjectionTable } from "@/components/simulator/projection-table";
 import { StressPanel } from "@/components/simulator/stress-panel";
 import { TaxCard } from "@/components/simulator/tax-card";
+import { createScenarioAtom } from "@/lib/api-client";
 import { inputAtom, shareUrl, simulationAtom } from "@/state/simulator";
 
 export const Route = createFileRoute("/")({
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/")({
 function HomeComponent() {
   const sim = useAtomValue(simulationAtom);
   const input = useAtomValue(inputAtom);
+  const createScenario = useAtomSet(createScenarioAtom, { mode: "promise" });
 
   const handleShare = () => {
     const url = shareUrl(input);
@@ -31,14 +33,38 @@ function HomeComponent() {
       .catch(() => toast.error("Kunde inte kopiera länken"));
   };
 
+  const handleSave = async () => {
+    const name = window.prompt("Namn på scenario");
+    if (!name) return;
+    try {
+      await createScenario({ payload: { name, input }, reactivityKeys: ["scenarios"] });
+      toast.success("Scenario sparat");
+    } catch {
+      toast.error("Logga in för att spara", {
+        action: {
+          label: "Logga in",
+          onClick: () => {
+            window.location.href = "/login";
+          },
+        },
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto max-w-7xl px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Sparstrategi-simulator</h1>
-        <Button variant="outline" size="sm" onClick={handleShare}>
-          <Share2Icon className="size-3.5" />
-          Dela
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleSave}>
+            <SaveIcon className="size-3.5" />
+            Spara scenario
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleShare}>
+            <Share2Icon className="size-3.5" />
+            Dela
+          </Button>
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
         <InputPanel />
