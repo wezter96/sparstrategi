@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { defaultScenarioInput } from "@sparstrategi/engine";
-import { parseShared, serializeShared } from "./simulator";
+import { clampStressSettings, parseShared, serializeShared } from "./simulator";
 
 describe("share-url round trip", () => {
   test("serialize → parse returns the same input", () => {
@@ -49,5 +49,52 @@ describe("share-url round trip", () => {
     const roundTripped = new URLSearchParams(queryString).get("s");
     expect(roundTripped).toBe(serialized);
     expect(parseShared(roundTripped ?? "")?.startCapital).toBe(1_234_567);
+  });
+});
+
+describe("clampStressSettings", () => {
+  test("leaves in-range crash year alone", () => {
+    const result = clampStressSettings(
+      { crashPct: 20, crashYear: 3 },
+      10,
+    );
+    expect(result.crashYear).toBe(3);
+    expect(result.crashPct).toBe(20);
+  });
+
+  test("clamps crash year above horizon to horizon", () => {
+    const result = clampStressSettings(
+      { crashPct: 20, crashYear: 15 },
+      5,
+    );
+    expect(result.crashYear).toBe(5);
+    expect(result.crashPct).toBe(20);
+  });
+
+  test("clamps crash year 0 to 1 (minimum)", () => {
+    const result = clampStressSettings(
+      { crashPct: 20, crashYear: 0 },
+      10,
+    );
+    expect(result.crashYear).toBe(1);
+    expect(result.crashPct).toBe(20);
+  });
+
+  test("clamps crash year negative to 1 (minimum)", () => {
+    const result = clampStressSettings(
+      { crashPct: 20, crashYear: -5 },
+      10,
+    );
+    expect(result.crashYear).toBe(1);
+    expect(result.crashPct).toBe(20);
+  });
+
+  test("handles horizon years 0 by clamping to 1", () => {
+    const result = clampStressSettings(
+      { crashPct: 20, crashYear: 2 },
+      0,
+    );
+    expect(result.crashYear).toBe(1);
+    expect(result.crashPct).toBe(20);
   });
 });

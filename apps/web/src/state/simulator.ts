@@ -48,7 +48,16 @@ export const stressSettingsAtom = Atom.make<{
   crashYear: number;
 } | null>(null);
 
+export const clampStressSettings = (
+  settings: { crashPct: number; crashYear: number },
+  horizonYears: number,
+): { crashPct: number; crashYear: number } => ({
+  crashPct: settings.crashPct,
+  crashYear: Math.max(1, Math.min(settings.crashYear, Math.max(1, Math.round(horizonYears)))),
+});
+
 export const stressResultAtom: Atom.Atom<StressResult | null> = Atom.make((get) => {
   const settings = get(stressSettingsAtom);
-  return settings ? stressTest(get(inputAtom), settings) : null;
+  const input = get(inputAtom);
+  return settings ? stressTest(input, clampStressSettings(settings, input.horizonYears)) : null;
 });
