@@ -40,6 +40,16 @@ describe("share-url round trip", () => {
     expect(buggyRoundTrip).toBe(" gAA");
   });
 
+  test("backward compat: a payload without manualIskShare still parses (pre-Task-14 shared links)", () => {
+    const { manualIskShare: _drop, ...legacyInput } = defaultScenarioInput;
+    expect(legacyInput).not.toHaveProperty("manualIskShare");
+    const s = btoa(encodeURIComponent(JSON.stringify(legacyInput)));
+    const parsed = parseShared(s);
+    expect(parsed).not.toBeNull();
+    expect(parsed?.manualIskShare).toBeUndefined();
+    expect(parsed?.startCapital).toBe(defaultScenarioInput.startCapital);
+  });
+
   test("shareUrl produces a URL whose query param decodes back to the exact serialized payload", () => {
     // jsdom/happy-dom aren't set up for this test file, so exercise the string contract shareUrl
     // relies on rather than calling shareUrl() itself (which reads window.location.origin).

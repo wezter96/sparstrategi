@@ -1,9 +1,10 @@
-import { useAtom } from "@effect/atom-react";
+import { useAtom, useAtomValue } from "@effect/atom-react";
+import { Button } from "@sparstrategi/ui/components/button";
 import { Checkbox } from "@sparstrategi/ui/components/checkbox";
 import { Input } from "@sparstrategi/ui/components/input";
 import { Label } from "@sparstrategi/ui/components/label";
 
-import { inputAtom } from "@/state/simulator";
+import { inputAtom, simulationAtom } from "@/state/simulator";
 
 function NumberField(props: {
   label: string;
@@ -47,12 +48,27 @@ function NumberField(props: {
 
 export function InputPanel() {
   const [input, setInput] = useAtom(inputAtom);
+  const simulation = useAtomValue(simulationAtom);
   const set = <K extends keyof typeof input>(key: K, value: (typeof input)[K]) =>
     setInput({ ...input, [key]: value });
   const setTax = <K extends keyof typeof input.taxParams>(
     key: K,
     value: (typeof input.taxParams)[K],
   ) => setInput({ ...input, taxParams: { ...input.taxParams, [key]: value } });
+
+  const isManual = input.manualIskShare !== undefined;
+  const autoShare =
+    simulation.calibration.initialPortfolio > 0
+      ? simulation.calibration.initialIsk / simulation.calibration.initialPortfolio
+      : 0;
+
+  const setAutoMode = () => {
+    const { manualIskShare: _drop, ...rest } = input;
+    setInput(rest);
+  };
+  const setManualMode = () => {
+    setInput({ ...input, manualIskShare: autoShare });
+  };
 
   return (
     <aside className="space-y-4">
@@ -114,6 +130,39 @@ export function InputPanel() {
         min={1}
         max={50}
       />
+
+      <div className="space-y-2">
+        <Label className="text-xs text-muted-foreground">Fördelning AF/ISK</Label>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant={isManual ? "outline" : "default"}
+            size="sm"
+            onClick={setAutoMode}
+          >
+            Auto (kalibrerad)
+          </Button>
+          <Button
+            type="button"
+            variant={isManual ? "default" : "outline"}
+            size="sm"
+            onClick={setManualMode}
+          >
+            Manuell
+          </Button>
+        </div>
+        {isManual ? (
+          <NumberField
+            label="ISK-andel (%)"
+            value={(input.manualIskShare ?? 0) * 100}
+            onChange={(v) => set("manualIskShare", Math.min(100, Math.max(0, v)) / 100)}
+            min={0}
+            max={100}
+            step={1}
+            suffix="%"
+          />
+        ) : null}
+      </div>
 
       <details className="rounded-lg border p-3">
         <summary className="cursor-pointer text-sm font-medium">

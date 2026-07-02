@@ -33,8 +33,8 @@ function AllocationTooltip({
 
 export function AllocationChart() {
   const sim = useAtomValue(simulationAtom);
-  const { initialAf, requiredIsk, initialPortfolio } = sim.calibration;
-  const isk = Math.max(0, Math.min(requiredIsk, initialPortfolio));
+  const { initialAf, initialIsk } = sim.calibration;
+  const isk = Math.max(0, initialIsk);
   const af = Math.max(0, initialAf);
   const total = af + isk;
 
