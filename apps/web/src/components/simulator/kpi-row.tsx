@@ -49,7 +49,7 @@ export function KpiRow() {
         label={`Förmögenhet år ${last.year}`}
         value={fmtKr(last.equity)}
         tone="green"
-        note={`Belåningsgrad ${fmtPct(last.ltv)}`}
+        note={`Belåningsgrad ${fmtPct(last.ltv)} · efter latent skatt: ${fmtKr(last.equityAfterLatentTax)}`}
       />
     </div>
   );

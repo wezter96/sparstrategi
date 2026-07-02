@@ -174,6 +174,64 @@ describe("manual AF/ISK allocation", () => {
   });
 });
 
+describe("latent AF capital-gains tax", () => {
+  test("document scenario year 1: AF gain ≈ 388.01 Mkr → afLatentTax ≈ 116.4 Mkr, equityAfterLatentTax = equity − afLatentTax", () => {
+    const result = simulate(documentInput);
+    const y1 = result.rows[1]!;
+    // AF gain for year 1 = initialAf × expectedReturn ≈ 388.01 Mkr (no erosion/tax reduces AF
+    // this year per the document-reproduction test; re-leverage proceeds add equally to af and
+    // basis, so they don't affect the unrealized-gain figure).
+    const expectedAfGain = result.calibration.initialAf * documentInput.expectedReturn;
+    expect(expectedAfGain).toBeCloseTo(388_010_000, -6);
+    const expectedLatentTax = expectedAfGain * documentTaxParams.afCapitalGainsRate;
+    expect(y1.afLatentTax).toBeCloseTo(expectedLatentTax, -4);
+    expect(y1.equityAfterLatentTax).toBeCloseTo(y1.equity - y1.afLatentTax, 0);
+  });
+
+  test("unleveraged saver special case: initial allocation is all ISK, af = 0 → afLatentTax = 0 at year 0", () => {
+    const result = simulate({
+      startCapital: 100_000,
+      monthlySavings: 1_000,
+      targetLtv: 0,
+      maxLtv: 0.5,
+      loanRate: 0.03,
+      expectedReturn: 0.07,
+      monthlyLivingCosts: 0,
+      horizonYears: 1,
+      taxParams: documentTaxParams,
+      goals: [],
+    });
+    const y0 = result.rows[0]!;
+    expect(y0.af).toBe(0);
+    expect(y0.afLatentTax).toBe(0);
+    expect(y0.equityAfterLatentTax).toBe(y0.equity);
+  });
+
+  test("AF basis grows with additions (savings/re-leverage) but latent tax only taxes gains, not deposits", () => {
+    const leveragedInput: ScenarioInput = {
+      startCapital: 1_000_000,
+      monthlySavings: 0,
+      targetLtv: 0.2,
+      maxLtv: 0.5,
+      loanRate: 0.03,
+      expectedReturn: 0.07,
+      monthlyLivingCosts: 0,
+      horizonYears: 1,
+      taxParams: documentTaxParams,
+      goals: [],
+    };
+    const withoutSavings = simulate(leveragedInput);
+    const withSavings = simulate({ ...leveragedInput, monthlySavings: 1_000 });
+    const y1NoSavings = withoutSavings.rows[1]!;
+    const y1WithSavings = withSavings.rows[1]!;
+
+    expect(y1WithSavings.af).toBeGreaterThan(y1NoSavings.af);
+    // The 12 000 kr/year of deposits inflate af but are basis, not gain — latent tax on the two
+    // scenarios should match closely (both derive purely from the AF growth rate).
+    expect(y1WithSavings.afLatentTax).toBeCloseTo(y1NoSavings.afLatentTax, 0);
+  });
+});
+
 describe("calibration.initialAf correctness", () => {
   test("unleveraged saver: initialAf=0, all capital in ISK", () => {
     const result = simulate({

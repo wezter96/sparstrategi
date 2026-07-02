@@ -20,6 +20,11 @@ export interface YearRow {
   newLoan: number;
   savingsAdded: number;
   warnings: ReadonlyArray<string>;
+  /** Latent (unrealized) capital-gains tax on AF: 30% × max(0, af − afBasis). Never actually
+   * paid in the core loop (AF is never sold) — reported for information only. */
+  afLatentTax: number;
+  /** equity − afLatentTax: what would remain if the AF position were liquidated today. */
+  equityAfterLatentTax: number;
 }
 
 export interface Calibration {
@@ -96,6 +101,14 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
   const initialAf = af;
   const initialIsk = isk;
 
+  // Cost basis for AF's latent capital-gains tax. Starts at the initial AF allocation;
+  // additions (savings, re-leverage proceeds routed to AF) increase it; withdrawals FROM AF
+  // (erosion shortfall, tax payments) reduce it by the withdrawn amount, floored at 0.
+  // Simplification: withdrawals are treated as coming out of basis first (not proportionally
+  // out of basis+gain), so reported unrealized gain (af − basis) only shrinks once basis is
+  // fully exhausted. This is a reporting simplification, not a real FIFO/average-cost model.
+  let basis = initialAf;
+
   const globalWarnings: string[] = [];
   if (!feasible) {
     globalWarnings.push(
@@ -123,6 +136,8 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
       newLoan: 0,
       savingsAdded: 0,
       warnings: [],
+      afLatentTax: 0,
+      equityAfterLatentTax: af + isk - loan,
     },
   ];
 
@@ -147,6 +162,8 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
     let iskAfter = isk + iskGain - need;
     let afAfter = af + afGain;
     if (iskAfter < 0) {
+      const shortfall = -iskAfter; // amount taken from AF
+      basis = Math.max(0, basis - shortfall);
       afAfter += iskAfter; // take shortfall from AF
       iskAfter = 0;
       warnings.push("ISK-uttag täcks av AF (principal erosion)");
@@ -157,10 +174,12 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
     const deduction = interestDeduction(interest, input.taxParams);
     const { net, excessReduction } = netTax(iskTaxAmount, deduction);
     afAfter -= net;
+    basis = Math.max(0, basis - net);
 
     // 4. Savings
     const savingsAdded = 12 * input.monthlySavings;
     afAfter += savingsAdded;
+    basis += savingsAdded;
 
     let exhausted = false;
     if (afAfter < 0) {
@@ -186,7 +205,9 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
           const iskDeficit = Math.max(0, iskTargetAmount - iskAfter);
           const addToIsk = Math.min(newLoan, iskDeficit);
           iskAfter += addToIsk;
-          afAfter += newLoan - addToIsk;
+          const addToAf = newLoan - addToIsk;
+          afAfter += addToAf;
+          basis += addToAf;
         } else {
           const iskTarget = requiredIskCapital(loan + newLoan, input);
           const topUp = Math.max(0, iskTarget - iskAfter);
@@ -195,7 +216,9 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
             warnings.push("ISK underkalibrerat");
           } else {
             iskAfter += topUp;
-            afAfter += newLoan - topUp;
+            const addToAf = newLoan - topUp;
+            afAfter += addToAf;
+            basis += addToAf;
           }
         }
         loan += newLoan;
@@ -206,6 +229,8 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
     isk = iskAfter;
     const portfolio = af + isk;
     const growth = afGain + iskGain;
+    const equity = portfolio - loan;
+    const afLatentTax = Math.max(0, af - basis) * input.taxParams.afCapitalGainsRate;
 
     rows.push({
       year,
@@ -214,7 +239,7 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
       isk,
       loan,
       ltv: portfolio > 0 ? loan / portfolio : 0,
-      equity: portfolio - loan,
+      equity,
       growth,
       interest,
       withdrawal: Math.min(need, iskAtStart + iskGain),
@@ -226,6 +251,8 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
       newLoan,
       savingsAdded,
       warnings,
+      afLatentTax,
+      equityAfterLatentTax: equity - afLatentTax,
     });
 
     if (exhausted) break;

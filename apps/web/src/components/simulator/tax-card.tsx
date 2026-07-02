@@ -39,6 +39,14 @@ export function TaxCard() {
             tone="green"
           />
         ) : null}
+        <TaxRow
+          label="Latent skatt AF (vid försäljning)"
+          value={`− ${fmtKr(y1.afLatentTax)}`}
+          tone="amber"
+        />
+      </div>
+      <div className="mt-1 text-xs text-muted-foreground">
+        Realiseras först vid försäljning — ingår ej i årets skatt
       </div>
       {y1.netTax === 0 ? (
         <div className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-2.5 text-xs text-emerald-300">
