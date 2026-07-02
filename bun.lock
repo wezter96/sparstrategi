@@ -112,6 +112,19 @@
       "name": "@sparstrategi/config",
       "version": "0.0.0",
     },
+    "packages/contract": {
+      "name": "@sparstrategi/contract",
+      "version": "0.0.0",
+      "dependencies": {
+        "@sparstrategi/engine": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@sparstrategi/config": "workspace:*",
+        "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
     "packages/db": {
       "name": "@sparstrategi/db",
       "dependencies": {
@@ -487,6 +500,8 @@
     "@sparstrategi/auth": ["@sparstrategi/auth@workspace:packages/auth"],
 
     "@sparstrategi/config": ["@sparstrategi/config@workspace:packages/config"],
+
+    "@sparstrategi/contract": ["@sparstrategi/contract@workspace:packages/contract"],
 
     "@sparstrategi/db": ["@sparstrategi/db@workspace:packages/db"],
 

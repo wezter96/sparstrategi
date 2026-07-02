@@ -1,0 +1,6 @@
+{
+  "extends": "@sparstrategi/config/tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist"
+  }
+}

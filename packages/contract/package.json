@@ -1,0 +1,22 @@
+{
+  "name": "@sparstrategi/contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@sparstrategi/engine": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@sparstrategi/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "typescript": "catalog:"
+  }
+}
