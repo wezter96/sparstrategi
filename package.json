@@ -27,6 +27,7 @@
   },
   "type": "module",
   "scripts": {
+    "prepare": "effect-language-service patch",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "check-types": "turbo run check-types",
@@ -44,6 +45,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@effect/language-service": "^0.86.2",
     "@sparstrategi/config": "workspace:*",
     "@types/bun": "catalog:",
     "turbo": "^2.10.2",
