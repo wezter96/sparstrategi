@@ -15,6 +15,7 @@ Existing better-t-stack scaffold (Bun, Turborepo, TanStack Router web app), with
 - `effect@4.0.0-beta.93` — pinned exact. Schema from `effect` root, HttpApi from `effect/unstable/httpapi`, HTTP server from `effect/unstable/http`.
 - `@effect/platform-bun@4.0.0-beta.93` — Bun HTTP server runtime.
 - `@effect/sql-sqlite-bun@4.0.0-beta.93` — SQLite access + migrations for app tables.
+- `@effect/atom-react@4.0.0-beta.93` — frontend state management (Atom from `effect/unstable/reactivity` with React bindings).
 - **Removed from scaffold:** tRPC, Hono, Drizzle. Better-Auth stays, configured directly on `bun:sqlite` (no ORM adapter).
 - All `effect*` beta packages pinned to the same exact beta version; upgrades are a deliberate single-commit bump.
 
@@ -78,6 +79,8 @@ Dark theme matching the source document's aesthetic (same palette family). Swedi
 **Charts:** Recharts, styled per the dataviz skill. Chart types: doughnut (allocation), bar (cashflow), line with area (projection, per-account series), bar (leverage restoration).
 
 **Live recompute:** engine runs client-side on every input change (debounced ~50ms). Server is persistence only.
+
+**Frontend Effect usage:** state managed with Atom (`@effect/atom-react`): input atoms (synced to URL search params), a derived simulation atom running the engine, and API atoms wrapping the `HttpApiClient` for scenario CRUD (loading/error states as Atom results). Effect Schema validates all form input; no separate state library.
 
 ## Error handling
 
