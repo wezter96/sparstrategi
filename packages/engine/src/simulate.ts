@@ -52,12 +52,14 @@ export function simulate(input: ScenarioInput): SimulationResult {
   const requiredIsk = requiredIskCapital(initialLoan, input);
   const feasible = requiredIsk <= initialPortfolio;
 
-  // When there's no funding need (no loan interest / no living costs to cover),
-  // default all capital to ISK — it's the tax-favored account; AF only exists
-  // to size the leveraged portion when the portfolio actually needs it.
+  // When there's no funding need (no loan interest / no living costs to cover)
+  // AND the portfolio is unleveraged (no initial loan), default all capital to ISK —
+  // it's the tax-favored account; AF only exists to size the leveraged portion when
+  // the portfolio actually needs it. Leveraged scenarios always use the generic formula
+  // (isk = min(requiredIsk, portfolio)) to avoid dumping leveraged AF into taxable ISK.
   let isk: number;
   let af: number;
-  if (requiredIsk <= 0) {
+  if (requiredIsk <= 0 && initialLoan <= 0) {
     isk = initialPortfolio;
     af = 0;
   } else {
@@ -65,6 +67,7 @@ export function simulate(input: ScenarioInput): SimulationResult {
     af = initialPortfolio - isk;
   }
   let loan = initialLoan;
+  const initialAf = af;
 
   const globalWarnings: string[] = [];
   if (!feasible) {
@@ -186,7 +189,7 @@ export function simulate(input: ScenarioInput): SimulationResult {
       initialPortfolio,
       initialLoan,
       requiredIsk,
-      initialAf: initialPortfolio - Math.min(requiredIsk, initialPortfolio),
+      initialAf,
       feasible,
     },
     rows,

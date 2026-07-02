@@ -115,3 +115,43 @@ describe("feasibility and erosion", () => {
     expect(y1.portfolio).toBeCloseTo(100_000 * 1.07 + 12_000 - 1_050, 0);
   });
 });
+
+describe("calibration.initialAf correctness", () => {
+  test("unleveraged saver: initialAf=0, all capital in ISK", () => {
+    const result = simulate({
+      startCapital: 100_000,
+      monthlySavings: 0,
+      targetLtv: 0,
+      maxLtv: 0.5,
+      loanRate: 0.03,
+      expectedReturn: 0.07,
+      monthlyLivingCosts: 0,
+      horizonYears: 2,
+      taxParams: documentTaxParams,
+      goals: [],
+    });
+    expect(result.calibration.initialAf).toBe(0);
+    expect(result.rows[0]!.isk).toBe(100_000);
+    expect(result.rows[0]!.af).toBe(0);
+  });
+
+  test("leveraged with zero loan rate and zero living costs: all AF, no ISK", () => {
+    const result = simulate({
+      startCapital: 1_000_000,
+      monthlySavings: 0,
+      targetLtv: 0.2,
+      maxLtv: 0.5,
+      loanRate: 0,
+      expectedReturn: 0.07,
+      monthlyLivingCosts: 0,
+      horizonYears: 2,
+      taxParams: documentTaxParams,
+      goals: [],
+    });
+    // startCapital 1M, targetLtv 0.2 → portfolio = 1M / (1 - 0.2) = 1.25M, loan = 0.25M
+    const expectedPortfolio = 1_250_000;
+    expect(result.calibration.initialPortfolio).toBe(expectedPortfolio);
+    expect(result.rows[0]!.isk).toBe(0);
+    expect(result.rows[0]!.af).toBe(expectedPortfolio);
+  });
+});
