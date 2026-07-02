@@ -27,6 +27,8 @@ export interface Calibration {
   initialLoan: number;
   requiredIsk: number;
   initialAf: number;
+  initialIsk: number;
+  mode: "auto" | "manual";
   feasible: boolean;
 }
 
@@ -59,6 +61,8 @@ export function simulate(input: ScenarioInput): SimulationResult {
   return simulateWithHooks(input, {});
 }
 
+const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
+
 export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): SimulationResult {
   const r = input.expectedReturn;
   const initialPortfolio =
@@ -67,14 +71,21 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
   const requiredIsk = requiredIskCapital(initialLoan, input);
   const feasible = requiredIsk <= initialPortfolio;
 
-  // When there's no funding need (no loan interest / no living costs to cover)
-  // AND the portfolio is unleveraged (no initial loan), default all capital to ISK —
-  // it's the tax-favored account; AF only exists to size the leveraged portion when
-  // the portfolio actually needs it. Leveraged scenarios always use the generic formula
-  // (isk = min(requiredIsk, portfolio)) to avoid dumping leveraged AF into taxable ISK.
+  const manualIskShare =
+    input.manualIskShare === undefined ? undefined : clamp01(input.manualIskShare);
+  const mode: "auto" | "manual" = manualIskShare === undefined ? "auto" : "manual";
+
   let isk: number;
   let af: number;
-  if (requiredIsk <= 0 && initialLoan <= 0) {
+  if (manualIskShare !== undefined) {
+    isk = manualIskShare * initialPortfolio;
+    af = initialPortfolio - isk;
+  } else if (requiredIsk <= 0 && initialLoan <= 0) {
+    // When there's no funding need (no loan interest / no living costs to cover)
+    // AND the portfolio is unleveraged (no initial loan), default all capital to ISK —
+    // it's the tax-favored account; AF only exists to size the leveraged portion when
+    // the portfolio actually needs it. Leveraged scenarios always use the generic formula
+    // (isk = min(requiredIsk, portfolio)) to avoid dumping leveraged AF into taxable ISK.
     isk = initialPortfolio;
     af = 0;
   } else {
@@ -83,6 +94,7 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
   }
   let loan = initialLoan;
   const initialAf = af;
+  const initialIsk = isk;
 
   const globalWarnings: string[] = [];
   if (!feasible) {
@@ -166,14 +178,25 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
       const loanTarget = (input.targetLtv * equityNow) / (1 - input.targetLtv);
       newLoan = Math.max(0, loanTarget - loan);
       if (newLoan > 0) {
-        const iskTarget = requiredIskCapital(loan + newLoan, input);
-        const topUp = Math.max(0, iskTarget - iskAfter);
-        if (topUp > newLoan) {
-          iskAfter += newLoan;
-          warnings.push("ISK underkalibrerat");
+        if (manualIskShare !== undefined) {
+          // Allocate proceeds to restore the manual ISK share on the post-borrow portfolio,
+          // only ADDING to whichever side is below target — never move money between accounts.
+          const postBorrowPortfolio = afAfter + iskAfter + newLoan;
+          const iskTargetAmount = manualIskShare * postBorrowPortfolio;
+          const iskDeficit = Math.max(0, iskTargetAmount - iskAfter);
+          const addToIsk = Math.min(newLoan, iskDeficit);
+          iskAfter += addToIsk;
+          afAfter += newLoan - addToIsk;
         } else {
-          iskAfter += topUp;
-          afAfter += newLoan - topUp;
+          const iskTarget = requiredIskCapital(loan + newLoan, input);
+          const topUp = Math.max(0, iskTarget - iskAfter);
+          if (topUp > newLoan) {
+            iskAfter += newLoan;
+            warnings.push("ISK underkalibrerat");
+          } else {
+            iskAfter += topUp;
+            afAfter += newLoan - topUp;
+          }
         }
         loan += newLoan;
       }
@@ -214,6 +237,8 @@ export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): Simula
       initialLoan,
       requiredIsk,
       initialAf,
+      initialIsk,
+      mode,
       feasible,
     },
     rows,

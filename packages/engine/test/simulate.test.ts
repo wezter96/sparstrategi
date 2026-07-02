@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { documentTaxParams, type ScenarioInput } from "../src/schema";
+import { Schema } from "effect";
+import { ScenarioInput, documentTaxParams } from "../src/schema";
 import { requiredIskCapital, simulate } from "../src/simulate";
 
 /** The source document's scenario: 5 Mdr own capital, 1 Mdr loan → 6 Mdr
@@ -113,6 +114,63 @@ describe("feasibility and erosion", () => {
     // y1: 100k×1.07 + 12k = 119 000 (ISK tax offset is 0 deduction; 100k×1.05% = 1 050 tax)
     const y1 = result.rows[1]!;
     expect(y1.portfolio).toBeCloseTo(100_000 * 1.07 + 12_000 - 1_050, 0);
+  });
+});
+
+describe("manual AF/ISK allocation", () => {
+  test("manual 50/50 on the document scenario: isk = af = 3 000 Mkr, year 1 netTax ≈ 25.2 Mkr", () => {
+    const result = simulate({ ...documentInput, manualIskShare: 0.5 });
+    expect(result.calibration.mode).toBe("manual");
+    expect(result.rows[0]!.isk).toBeCloseTo(3_000_000_000, -3);
+    expect(result.rows[0]!.af).toBeCloseTo(3_000_000_000, -3);
+    const y1 = result.rows[1]!;
+    expect(y1.iskTax).toBeCloseTo(3_000_000_000 * 0.0105, -3);
+    expect(y1.deduction).toBeCloseTo(6_300_000, -3);
+    expect(y1.netTax).toBeCloseTo(25_200_000, -3);
+    expect(y1.effectiveTaxRate).toBeGreaterThan(0);
+  });
+
+  test("manual under-allocation (isk < requiredIsk) triggers erosion warning in year 1", () => {
+    const result = simulate({ ...documentInput, manualIskShare: 0.001 });
+    expect(result.calibration.initialIsk).toBeLessThan(result.calibration.requiredIsk);
+    const y1 = result.rows[1]!;
+    expect(y1.warnings).toContain("ISK-uttag täcks av AF (principal erosion)");
+  });
+
+  test("manual share 0 with a loan and living costs: all erosion from AF, no crash", () => {
+    const result = simulate({ ...documentInput, manualIskShare: 0 });
+    expect(result.calibration.initialIsk).toBe(0);
+    expect(result.rows[0]!.isk).toBe(0);
+    const y1 = result.rows[1]!;
+    expect(y1.warnings).toContain("ISK-uttag täcks av AF (principal erosion)");
+    expect(result.rows.every((row) => Number.isFinite(row.af) && Number.isFinite(row.isk))).toBe(
+      true,
+    );
+  });
+
+  test("auto mode regression: manualIskShare undefined produces identical rows to pre-change engine", () => {
+    const resultExplicitUndefined = simulate({ ...documentInput, manualIskShare: undefined });
+    const resultAbsent = simulate(documentInput);
+    expect(resultExplicitUndefined.calibration.mode).toBe("auto");
+    expect(resultAbsent.calibration.mode).toBe("auto");
+    expect(resultExplicitUndefined.calibration.requiredIsk).toBeCloseTo(457_142_857, -3);
+    expect(resultExplicitUndefined.rows[1]!.interest).toBeCloseTo(30_000_000, -3);
+    expect(resultExplicitUndefined.rows[1]!.withdrawal).toBeCloseTo(32_000_000, -3);
+    expect(resultExplicitUndefined.rows[1]!.growth).toBeCloseTo(420_000_000, -4);
+    expect(resultExplicitUndefined.rows[1]!.netTax).toBe(0);
+    // Decoding an object without the key at all (schema-level absence) also yields auto mode.
+    const decoded = Schema.decodeUnknownSync(ScenarioInput)({
+      ...documentInput,
+    });
+    expect(decoded).not.toHaveProperty("manualIskShare");
+  });
+
+  test("re-leverage keeps the manual share: 0.3 share, year 1 isk/portfolio ≈ 0.3 when no erosion", () => {
+    const result = simulate({ ...documentInput, manualIskShare: 0.3 });
+    const y1 = result.rows[1]!;
+    if (y1.warnings.length === 0) {
+      expect(y1.isk / y1.portfolio).toBeCloseTo(0.3, 1);
+    }
   });
 });
 

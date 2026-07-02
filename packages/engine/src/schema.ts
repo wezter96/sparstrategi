@@ -68,6 +68,8 @@ export const ScenarioInput = Schema.Struct({
   horizonYears: Schema.Number,
   taxParams: TaxParams,
   goals: Schema.Array(Goal),
+  /** Manual ISK share (fraction 0–1 of total portfolio). Absent → auto-calibrated (default). */
+  manualIskShare: Schema.optional(Schema.Number),
 });
 export type ScenarioInput = typeof ScenarioInput.Type;
 
