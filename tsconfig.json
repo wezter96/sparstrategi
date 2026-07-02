@@ -1,0 +1,3 @@
+{
+  "extends": "@sparstrategi/config/tsconfig.base.json"
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@sparstrategi/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@sparstrategi/db": "workspace:*",
+    "@sparstrategi/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@sparstrategi/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
