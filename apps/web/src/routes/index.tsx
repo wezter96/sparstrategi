@@ -6,10 +6,12 @@ import { toast } from "sonner";
 
 import { AllocationChart } from "@/components/simulator/allocation-chart";
 import { CashflowCard } from "@/components/simulator/cashflow-card";
+import { GoalsPanel } from "@/components/simulator/goals-panel";
 import { InputPanel } from "@/components/simulator/input-panel";
 import { KpiRow } from "@/components/simulator/kpi-row";
 import { ProjectionChart } from "@/components/simulator/projection-chart";
 import { ProjectionTable } from "@/components/simulator/projection-table";
+import { StressPanel } from "@/components/simulator/stress-panel";
 import { TaxCard } from "@/components/simulator/tax-card";
 import { inputAtom, shareUrl, simulationAtom } from "@/state/simulator";
 
@@ -58,6 +60,8 @@ function HomeComponent() {
           <ProjectionChart />
           <ProjectionTable />
           <TaxCard />
+          <GoalsPanel />
+          <StressPanel />
         </div>
       </div>
     </div>
