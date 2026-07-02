@@ -1,18 +1,11 @@
-import { createDb } from "@sparstrategi/db";
-import * as schema from "@sparstrategi/db/schema/auth";
+/// <reference types="bun" />
+import { Database } from "bun:sqlite";
 import { env } from "@sparstrategi/env/server";
 import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
 export function createAuth() {
-  const db = createDb();
-
   return betterAuth({
-    database: drizzleAdapter(db, {
-      provider: "sqlite",
-
-      schema: schema,
-    }),
+    database: new Database(env.DATABASE_URL),
     trustedOrigins: [env.CORS_ORIGIN],
     emailAndPassword: {
       enabled: true,

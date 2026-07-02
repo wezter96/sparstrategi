@@ -9,9 +9,10 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "auth:migrate": "DOTENV_CONFIG_PATH=../../apps/server/.env bun run auth-migrate.ts"
+  },
   "dependencies": {
-    "@sparstrategi/db": "workspace:*",
     "@sparstrategi/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@sparstrategi/config": "workspace:*",
+    "@types/bun": "catalog:",
     "typescript": "catalog:"
   }
 }

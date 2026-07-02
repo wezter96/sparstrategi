@@ -97,7 +97,6 @@
     "packages/auth": {
       "name": "@sparstrategi/auth",
       "dependencies": {
-        "@sparstrategi/db": "workspace:*",
         "@sparstrategi/env": "workspace:*",
         "better-auth": "catalog:",
         "dotenv": "catalog:",
@@ -105,6 +104,7 @@
       },
       "devDependencies": {
         "@sparstrategi/config": "workspace:*",
+        "@types/bun": "catalog:",
         "typescript": "catalog:",
       },
     },
