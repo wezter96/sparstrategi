@@ -25,7 +25,7 @@ export const parseShared = (s: string): ScenarioInput | null => {
 };
 
 export const shareUrl = (input: ScenarioInput): string =>
-  `${window.location.origin}/?s=${serializeShared(input)}`;
+  `${window.location.origin}/?s=${encodeURIComponent(serializeShared(input))}`;
 
 const initialInput = (): ScenarioInput => {
   if (typeof window === "undefined") return defaultScenarioInput;
