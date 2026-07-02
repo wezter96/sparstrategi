@@ -66,7 +66,10 @@ const HealthRoute = HttpRouter.add("GET", "/", () =>
 const CorsLayer = HttpRouter.cors({
   allowedOrigins: [env.CORS_ORIGIN],
   allowedMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  // Reflect the browser's actual Access-Control-Request-Headers instead of a
+  // fixed allowlist: the Effect HttpClient attaches tracing propagation
+  // headers (traceparent, tracestate, b3, ...) that vary by instrumentation,
+  // and a fixed list would need to be kept in sync with those.
   credentials: true,
 });
 
