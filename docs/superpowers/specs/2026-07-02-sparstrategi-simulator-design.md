@@ -14,9 +14,10 @@ Existing better-t-stack scaffold (Bun, Turborepo, TanStack Router web app), with
 
 - `effect@4.0.0-beta.93` — pinned exact. Schema from `effect` root, HttpApi from `effect/unstable/httpapi`, HTTP server from `effect/unstable/http`.
 - `@effect/platform-bun@4.0.0-beta.93` — Bun HTTP server runtime.
-- `@effect/sql-sqlite-bun@4.0.0-beta.93` — SQLite access + migrations for app tables.
+- `@effect/sql-sqlite-bun@4.0.0-beta.93` — SQLite driver layer (`SqliteClient` service).
+- `drizzle-orm@1.0.0-rc.4` — Effect-native ORM on top of the `SqliteClient` service (`drizzle-orm/effect-sqlite-bun`): typed table schema, Effect-returning query builder, Schema-typed errors. Pin exactly `1.0.0-rc.4` — the newer `1.0.0-rc.4-5d5b77c` build has the Effect SQLite drivers stripped.
 - `@effect/atom-react@4.0.0-beta.93` — frontend state management (Atom from `effect/unstable/reactivity` with React bindings).
-- **Removed from scaffold:** tRPC, Hono, Drizzle. Better-Auth stays, configured directly on `bun:sqlite` (no ORM adapter).
+- **Removed from scaffold:** tRPC, Hono, Drizzle 0.x with drizzle-kit (replaced by Drizzle 1.0 RC Effect integration). Better-Auth stays, configured directly on `bun:sqlite` (no ORM adapter).
 - All `effect*` beta packages pinned to the same exact beta version; upgrades are a deliberate single-commit bump.
 
 ## Architecture
@@ -60,7 +61,7 @@ No Effect runtime dependency in the math itself; input/output types defined with
 - `HttpApi` definition in a shared location so the web app derives a typed client via `HttpApiClient` (contract-first, replaces tRPC's role).
 - Endpoints: `scenarios.list / get / create / update / delete`. Payloads validated with the shared Effect Schema types from `packages/engine`.
 - Auth: Better-Auth mounted on its `/api/auth/*` routes; API endpoints gated by an Effect middleware that resolves the Better-Auth session from request headers and provides a `CurrentUser` service; 401 otherwise. Ownership enforced on every scenario query (`userId = session.user.id`).
-- Persistence: `@effect/sql-sqlite-bun` on the same `local.db` file Better-Auth uses. App tables via `@effect/sql` migrator (TypeScript migrations); Better-Auth manages its own tables via its CLI.
+- Persistence: Drizzle 1.0 RC Effect integration (`drizzle-orm/effect-sqlite-bun`) over `@effect/sql-sqlite-bun`'s `SqliteClient`, on the same `local.db` file Better-Auth uses. App table DDL applied at startup; Better-Auth manages its own tables via its CLI.
 - Structure: `SqlLive` layer, `ScenarioRepo` service (Effect.Service), `HttpApiBuilder` groups, single `BunHttpServer` entrypoint. CORS as in current scaffold.
 
 **Data model (`scenario` table):**
