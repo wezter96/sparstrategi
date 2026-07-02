@@ -36,6 +36,17 @@ export interface SimulationResult {
   warnings: ReadonlyArray<string>;
 }
 
+export interface SimState {
+  af: number;
+  isk: number;
+  loan: number;
+}
+
+export interface SimHooks {
+  onYearStart?: (year: number, state: SimState) => SimState;
+  allowReleverage?: (state: SimState) => boolean;
+}
+
 /** ISK capital needed so its return covers loan interest + living costs. */
 export const requiredIskCapital = (loan: number, input: ScenarioInput): number => {
   const yearlyNeed = input.loanRate * loan + 12 * input.monthlyLivingCosts;
@@ -45,6 +56,10 @@ export const requiredIskCapital = (loan: number, input: ScenarioInput): number =
 };
 
 export function simulate(input: ScenarioInput): SimulationResult {
+  return simulateWithHooks(input, {});
+}
+
+export function simulateWithHooks(input: ScenarioInput, hooks: SimHooks): SimulationResult {
   const r = input.expectedReturn;
   const initialPortfolio =
     input.targetLtv > 0 ? input.startCapital / (1 - input.targetLtv) : input.startCapital;
@@ -100,6 +115,13 @@ export function simulate(input: ScenarioInput): SimulationResult {
   ];
 
   for (let year = 1; year <= input.horizonYears; year++) {
+    if (hooks.onYearStart) {
+      const next = hooks.onYearStart(year, { af, isk, loan });
+      af = next.af;
+      isk = next.isk;
+      loan = next.loan;
+    }
+
     const warnings: string[] = [];
     const iskAtStart = isk;
 
@@ -137,8 +159,10 @@ export function simulate(input: ScenarioInput): SimulationResult {
 
     // 5. Re-leverage to target LTV; proceeds recalibrate ISK first, rest to AF
     const equityNow = afAfter + iskAfter - loan;
+    const releverageAllowed =
+      hooks.allowReleverage?.({ af: afAfter, isk: iskAfter, loan }) ?? true;
     let newLoan = 0;
-    if (input.targetLtv > 0 && equityNow > 0 && !exhausted) {
+    if (input.targetLtv > 0 && equityNow > 0 && !exhausted && releverageAllowed) {
       const loanTarget = (input.targetLtv * equityNow) / (1 - input.targetLtv);
       newLoan = Math.max(0, loanTarget - loan);
       if (newLoan > 0) {
