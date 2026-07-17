@@ -13,7 +13,7 @@ import { interestDeduction, iskTax, iskTaxRate, netTax } from "./tax";
  *   4. Utdelningsskatt + källskatt per kontotyp; återinvestera eller betala ut.
  *   5. Ombalansering: kostnader på omsatt volym; på AF realiseras vinst.
  */
-export type ComparisonAccountType = "isk" | "af" | "kf";
+export type ComparisonAccountType = "isk" | "af" | "kf" | "none";
 
 export interface ComparisonAssumptions {
   startCapital: number;
@@ -200,7 +200,9 @@ export function simulateStrategy(
         ? Math.max(withheld, gainsRate * dividends)
         : s.accountType === "kf"
           ? 0
-          : Math.max(0, withheld - schablon);
+          : s.accountType === "none"
+            ? withheld
+            : Math.max(0, withheld - schablon);
     paidTax += divTax;
     const netDividends = dividends - divTax;
     if (s.reinvestDividends) {

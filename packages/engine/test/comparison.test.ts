@@ -268,6 +268,24 @@ describe("savingsStartYear", () => {
   });
 });
 
+describe("kontotyp \"none\" (skattefri)", () => {
+  test("ingen skatt någonstans: value följer (1+g)^n och paidTax är 0", () => {
+    const a = assumptions({ startCapital: 100_000, monthlySavings: 0, horizonYears: 10 });
+    const r = simulateStrategy(a, {
+      ...defaultStrategyInput("amortering"),
+      accountType: "none",
+      priceGrowth: 0.0245,
+      fundFeeRate: 0,
+    });
+    expect(r.final.paidTax).toBe(0);
+    expect(r.rows.at(-1)!.value).toBeCloseTo(100_000 * Math.pow(1.0245, 10), 4);
+    for (const row of r.rows) {
+      expect(row.latentTax).toBe(0);
+      expect(row.valueAfterRealization).toBe(row.value);
+    }
+  });
+});
+
 describe("belåning", () => {
   test("utan skatt/avgifter: value = start × (1 + (1+L)·g − L·i)^n", () => {
     const a = assumptions({ startCapital: 100_000, monthlySavings: 0, horizonYears: 10 });
