@@ -138,6 +138,10 @@ export function StrategyColumn({ index }: { index: number }) {
         return (
           <NumberField key={key} label="Eget månadssparande (kr/mån)" value={strategy.monthlySavingsOverride ?? input.assumptions.monthlySavings} onChange={(v) => set("monthlySavingsOverride", Math.max(0, v))} min={0} max={1_000_000} step={500} />
         );
+      case "savingsStartYear":
+        return (
+          <NumberField key={key} label="Börjar spara efter år" value={strategy.savingsStartYear ?? 0} onChange={(v) => set("savingsStartYear", Math.max(0, Math.round(v)))} min={0} max={40} />
+        );
       default:
         return null;
     }
@@ -157,6 +161,7 @@ export function StrategyColumn({ index }: { index: number }) {
     "rebalancesPerYear",
     "turnoverShare",
     "spreadRate",
+    "savingsStartYear",
     ...(template.lockDeposits
       ? []
       : (["startCapitalOverride", "monthlySavingsOverride"] as const)),

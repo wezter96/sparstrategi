@@ -138,6 +138,42 @@ export const templates: ComparisonTemplate[] = [
     lockDeposits: false,
   },
   {
+    id: "tidigt",
+    title: "Börja tidigt eller vänta?",
+    question: "Samma månadssparande — men den ena väntar tio år med att börja.",
+    explainer:
+      "Tid i marknaden slår nästan allt annat. Den som väntar tio år måste inte bara ta igen " +
+      "insättningarna — utan även all avkastning de tidiga insättningarna hunnit generera, och " +
+      "avkastningen på den avkastningen. Notera att gapet i slutvärde är mycket större än de " +
+      "insättningar som missades: det är ränta-på-ränta-effekten. Dra i horisonten och se hur " +
+      "gapet växer med tiden.",
+    assumptions: { startCapital: 0, monthlySavings: 3_000, horizonYears: 30 },
+    strategies: [
+      { ...s("Börjar nu") },
+      { ...s("Väntar 10 år"), savingsStartYear: 10 },
+    ],
+    highlightedFields: ["savingsStartYear"],
+    lockDeposits: true,
+  },
+  {
+    id: "risk",
+    title: "Spara mer eller ta mer risk?",
+    question: "1 000 kr extra i månaden — eller en procentenhet högre avkastning?",
+    explainer:
+      "Tidigt i spartiden dominerar insättningarna: 1 000 kr extra i månaden slår lätt en " +
+      "procentenhet i avkastning. Men avkastningen verkar på hela kapitalet, så när portföljen " +
+      "vuxit sig stor vänder det — brytpunkten syns där kurvorna korsas. Extra sparande är " +
+      "dessutom garanterat, högre avkastning kräver mer risk. Justera beloppen och " +
+      "avkastningen för din egen situation.",
+    assumptions: { startCapital: 50_000, monthlySavings: 4_000, horizonYears: 25 },
+    strategies: [
+      { ...s("Spara mer"), priceGrowth: 0.06, monthlySavingsOverride: 5_000 },
+      { ...s("Mer risk"), priceGrowth: 0.07 },
+    ],
+    highlightedFields: ["priceGrowth", "monthlySavingsOverride"],
+    lockDeposits: false,
+  },
+  {
     id: "egen",
     title: "Egen jämförelse",
     question: "Börja från ett blankt läge och ställ in allt själv.",
