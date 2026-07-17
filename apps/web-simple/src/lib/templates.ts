@@ -151,5 +151,6 @@ export const templates: ComparisonTemplate[] = [
   },
 ];
 
+// Obs: "egen" måste ligga sist i `templates` — templateById faller tillbaka på .at(-1).
 export const templateById = (id: string): ComparisonTemplate =>
   templates.find((t) => t.id === id) ?? templates.at(-1)!;

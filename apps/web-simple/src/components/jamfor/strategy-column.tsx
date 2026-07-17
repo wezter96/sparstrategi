@@ -132,11 +132,11 @@ export function StrategyColumn({ index }: { index: number }) {
         );
       case "startCapitalOverride":
         return (
-          <NumberField key={key} label="Eget startkapital (kr)" value={strategy.startCapitalOverride ?? 0} onChange={(v) => set("startCapitalOverride", Math.max(0, v))} min={0} max={100_000_000} step={10_000} />
+          <NumberField key={key} label="Eget startkapital (kr)" value={strategy.startCapitalOverride ?? input.assumptions.startCapital} onChange={(v) => set("startCapitalOverride", Math.max(0, v))} min={0} max={100_000_000} step={10_000} />
         );
       case "monthlySavingsOverride":
         return (
-          <NumberField key={key} label="Eget månadssparande (kr/mån)" value={strategy.monthlySavingsOverride ?? 0} onChange={(v) => set("monthlySavingsOverride", Math.max(0, v))} min={0} max={1_000_000} step={500} />
+          <NumberField key={key} label="Eget månadssparande (kr/mån)" value={strategy.monthlySavingsOverride ?? input.assumptions.monthlySavings} onChange={(v) => set("monthlySavingsOverride", Math.max(0, v))} min={0} max={1_000_000} step={500} />
         );
       default:
         return null;

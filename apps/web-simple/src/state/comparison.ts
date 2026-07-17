@@ -1,5 +1,6 @@
 import {
   compareStrategies,
+  defaultStrategyInput,
   defaultTaxParams2026,
   type StrategyInput,
   type StrategyResult,
@@ -34,7 +35,11 @@ const parse = (s: string): ComparisonUiInput | null => {
     return {
       templateId: parsed.templateId ?? "egen",
       assumptions: { ...base.assumptions, ...parsed.assumptions },
-      strategies: parsed.strategies,
+      strategies: parsed.strategies.map((s) => ({
+        ...defaultStrategyInput("Strategi"),
+        ...s,
+        name: typeof s?.name === "string" ? s.name : "Strategi",
+      })),
     };
   } catch {
     return null;
