@@ -1,6 +1,5 @@
 import type { TaxParams } from "./schema";
-// Task 2:
-// import { iskTax, iskTaxRate } from "./tax";
+import { iskTax, iskTaxRate } from "./tax";
 
 /**
  * Generell jämförelsemotor: N strategier med identiska insättningar simuleras
@@ -170,13 +169,34 @@ export function simulateStrategy(
     let newValue = capStart + netDeposits + appreciation - fee;
     basis += netDeposits;
 
-    // 3–4. Skatt (Task 2) och 5. ombalansering (Task 3) infogas här.
+    // 3. Schablonskatt på årets ingående kapital.
+    const schablon =
+      s.accountType === "isk"
+        ? iskTax(capStart, p)
+        : s.accountType === "kf"
+          ? Math.max(0, capStart) * iskTaxRate(p)
+          : 0;
+    newValue -= schablon;
+    paidTax += schablon;
+
+    // 4. Utdelning: källskatt + kontoskatt.
+    const withheld = s.foreignWithholdingRate * dividends;
+    const divTax =
+      s.accountType === "af"
+        ? Math.max(withheld, gainsRate * dividends)
+        : s.accountType === "kf"
+          ? 0
+          : Math.max(0, withheld - schablon);
+    paidTax += divTax;
+    const netDividends = dividends - divTax;
     if (s.reinvestDividends) {
-      newValue += dividends;
-      basis += dividends;
+      newValue += netDividends;
+      basis += netDividends;
     } else {
-      dividendsReceived += dividends;
+      dividendsReceived += netDividends;
     }
+
+    // 5. Ombalansering (Task 3) infogas här.
 
     value = Math.max(0, newValue);
     frictionless =
