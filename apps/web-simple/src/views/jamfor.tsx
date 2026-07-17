@@ -19,6 +19,9 @@ export function JamforView() {
   const template = templateById(input.templateId);
   const route = useRoute();
 
+  // App-genererade dela-länkar har alltid hash-id == payloadens templateId (se
+  // `comparisonShareUrl`), så en `?j=`-payload skrivs aldrig över; endast
+  // handredigerade URL:er med motstridigt hash-id nollställs till mallen.
   useEffect(() => {
     if (route.view !== "jamfor" || !route.templateId) return;
     const target = templateById(route.templateId).id;

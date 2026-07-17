@@ -12,6 +12,8 @@ export const parseHash = (hash: string): Route => {
   if (hash.startsWith("#/kapitalmotor")) return { view: "kapitalmotor" };
   if (hash.startsWith("#/jamfor")) {
     const id = hash.replace(/^#\//, "").split("/")[1];
+    // Utelämnat id lämnas medvetet undefined så att en `?j=`-payload utan
+    // hash-id inte skrivs över av mall-synken.
     return id ? { view: "jamfor", templateId: id } : { view: "jamfor" };
   }
   return { view: "start" };

@@ -56,7 +56,9 @@ export function JamforKpis() {
               </div>
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Förlorat till friktion</dt>
-                <dd>{fmtKr(r.final.lostToFriction)}</dd>
+                {/* Hävstång gör den friktionsfria baslinjen missvisande — visa
+                    streck i stället för negativ friktion. */}
+                <dd>{r.final.lostToFriction < 0 ? "—" : fmtKr(r.final.lostToFriction)}</dd>
               </div>
             </dl>
           </div>
