@@ -6,3 +6,5 @@ export * from "./goals";
 export * from "./stress";
 export * from "./kapitalmotor";
 export * from "./holding";
+export * from "./kelly";
+export * from "./montecarlo";

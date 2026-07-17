@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { KapitalmotorComparisonChart } from "@/components/kapitalmotor/comparison-chart";
 import { KapitalmotorHoldingCard } from "@/components/kapitalmotor/holding-card";
 import { KapitalmotorInputPanel } from "@/components/kapitalmotor/input-panel";
+import { KapitalmotorKellyCard } from "@/components/kapitalmotor/kelly-card";
 import { KapitalmotorKpiRow } from "@/components/kapitalmotor/kpi-row";
 import { KapitalmotorRealizedChart } from "@/components/kapitalmotor/realized-chart";
 import { KapitalmotorTable } from "@/components/kapitalmotor/table";
@@ -48,6 +49,7 @@ function KapitalmotorComponent() {
           <KapitalmotorTable />
           <KapitalmotorComparisonChart />
           <KapitalmotorRealizedChart />
+          <KapitalmotorKellyCard />
           <KapitalmotorHoldingCard />
         </div>
       </div>

@@ -1,11 +1,17 @@
 import { Atom } from "effect/unstable/reactivity";
 import {
   defaultHoldingTaxParams2026,
+  defaultMonteCarloPaths,
   defaultTaxParams2026,
+  defaultVolatility,
+  growthRateCurve,
+  kellyOptimalLtvOfEquity,
   simulateHolding,
   simulateKapitalmotor,
+  simulateMonteCarlo,
   type HoldingInput,
   type KapitalmotorInput,
+  type MonteCarloInput,
 } from "@sparstrategi/engine";
 
 export interface KapitalmotorUiInput {
@@ -16,6 +22,8 @@ export interface KapitalmotorUiInput {
   horizonYears: number;
   capitalGainsTaxRate: number;
   extractDividends: boolean;
+  volatility: number;
+  maxLtvOfTotal: number;
 }
 
 export const defaultKapitalmotorUiInput: KapitalmotorUiInput = {
@@ -26,6 +34,8 @@ export const defaultKapitalmotorUiInput: KapitalmotorUiInput = {
   horizonYears: 10,
   capitalGainsTaxRate: 0.3,
   extractDividends: true,
+  volatility: defaultVolatility,
+  maxLtvOfTotal: 0.6,
 };
 
 const serialize = (input: KapitalmotorUiInput): string =>
@@ -90,6 +100,46 @@ export const longHorizonAtom = Atom.make((get) => {
     alt1: simulateKapitalmotor(toEngineInput(long, "split", false)),
     alt2: simulateKapitalmotor(toEngineInput(long, "allIsk", false)),
   };
+});
+
+const kellyParamsOf = (ui: KapitalmotorUiInput) => ({
+  expectedReturn: ui.expectedReturn,
+  volatility: ui.volatility,
+  loanRate: ui.loanRate,
+});
+
+/** Kelly-optimal belåningsgrad (kontinuerlig approximation) för nuvarande μ/σ/r. */
+export const kellyOptimalAtom = Atom.make((get) =>
+  kellyOptimalLtvOfEquity(kellyParamsOf(get(kapitalmotorInputAtom))),
+);
+
+/** Tillväxttakt (analytisk) över ett spann av belåningsgrader, för Kelly-kurvan. */
+export const kellyCurveAtom = Atom.make((get) => {
+  const ui = get(kapitalmotorInputAtom);
+  const kellyL = kellyOptimalLtvOfEquity(kellyParamsOf(ui));
+  const maxL = Math.max(0.6, Math.min(3, kellyL * 2.2, ui.targetLtvOfEquity * 2.5));
+  return growthRateCurve(kellyParamsOf(ui), { maxLtvOfEquity: maxL, steps: 60 });
+});
+
+/** Empirisk validering av Kelly-kurvan: stokastisk simulering med den faktiska,
+ * diskreta årsvisa återbelåningsmekaniken (inte bara kontinuerlig approximation). */
+export const monteCarloAtom = Atom.make((get) => {
+  const ui = get(kapitalmotorInputAtom);
+  const input: MonteCarloInput = {
+    equity: ui.equity,
+    targetLtvOfEquity: ui.targetLtvOfEquity,
+    expectedReturn: ui.expectedReturn,
+    volatility: ui.volatility,
+    loanRate: ui.loanRate,
+    taxParams: defaultTaxParams2026,
+    horizonYears: ui.horizonYears,
+    capitalGainsTaxRate: ui.capitalGainsTaxRate,
+    maxLtvOfTotal: ui.maxLtvOfTotal,
+    withdraw: false,
+    paths: defaultMonteCarloPaths,
+    seed: 20260717,
+  };
+  return simulateMonteCarlo(input);
 });
 
 export const holdingAtom = Atom.make((get) => {

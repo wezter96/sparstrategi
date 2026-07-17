@@ -39,12 +39,30 @@ export function KapitalmotorInputPanel() {
         suffix="%"
       />
       <NumberField
+        label="Volatilitet, årlig (%)"
+        value={input.volatility * 100}
+        onChange={(v) => set("volatility", v / 100)}
+        min={0}
+        max={50}
+        step={1}
+        suffix="%"
+      />
+      <NumberField
         label="Låneränta (%)"
         value={input.loanRate * 100}
         onChange={(v) => set("loanRate", v / 100)}
         min={0}
         max={10}
         step={0.1}
+        suffix="%"
+      />
+      <NumberField
+        label="Mäklarens marginalkrav, lån / total portfölj (%)"
+        value={input.maxLtvOfTotal * 100}
+        onChange={(v) => set("maxLtvOfTotal", v / 100)}
+        min={10}
+        max={90}
+        step={1}
         suffix="%"
       />
       <NumberField
