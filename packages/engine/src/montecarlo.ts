@@ -103,7 +103,8 @@ export function simulateMonteCarlo(input: MonteCarloInput): MonteCarloResult {
     {
       const interest0 = loan0 * i;
       const deduction0 = interestDeduction(interest0, taxParams);
-      isk = te > 0 ? deduction0 / te : 0;
+      // Samma skatteneutrala kalibrering som kapitalmotor.ts, inkl. fribeloppet.
+      isk = te > 0 ? Math.min(total0, deduction0 / te + taxParams.iskFreeAmount) : 0;
       af = total0 - isk;
     }
     let loan = loan0;
@@ -152,7 +153,8 @@ export function simulateMonteCarlo(input: MonteCarloInput): MonteCarloResult {
       const totalAfterLever = equityThisYear + loanNew;
       const interestNext = loanNew * i;
       const deductionNext = interestDeduction(interestNext, taxParams);
-      const iskNew = te > 0 ? deductionNext / te : 0;
+      const iskNew =
+        te > 0 ? Math.min(totalAfterLever, deductionNext / te + taxParams.iskFreeAmount) : 0;
       af = totalAfterLever - iskNew;
       isk = iskNew;
       loan = loanNew;

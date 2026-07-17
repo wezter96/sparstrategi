@@ -18,17 +18,20 @@ const COLORS = { book: "#6c8cff", realized: "#34d399", alt2: "#fbbf24" } as cons
 export function KapitalmotorRealizedChart() {
   const { alt1, alt2 } = useAtomValue(longHorizonAtom);
 
+  // Allt skuldfritt (netto eget lån): alternativen bär olika stora lån, så
+  // bruttoportföljer är inte jämförbara — Alt 1:s lån växer snabbare.
   const data = alt1.rows.map((row, idx) => ({
     year: row.year,
-    book: row.portfolio,
-    realized: row.realizedNetWorth,
-    alt2: alt2.rows[idx]?.portfolio ?? null,
+    book: row.equity,
+    realized: row.debtFreeNetWorth,
+    alt2: alt2.rows[idx]?.debtFreeNetWorth ?? null,
   }));
 
   let crossoverYear: number | null = null;
   for (let idx = 1; idx < alt1.rows.length; idx++) {
-    const diff = alt1.rows[idx]!.realizedNetWorth - (alt2.rows[idx]?.portfolio ?? 0);
-    const prevDiff = alt1.rows[idx - 1]!.realizedNetWorth - (alt2.rows[idx - 1]?.portfolio ?? 0);
+    const diff = alt1.rows[idx]!.debtFreeNetWorth - (alt2.rows[idx]?.debtFreeNetWorth ?? 0);
+    const prevDiff =
+      alt1.rows[idx - 1]!.debtFreeNetWorth - (alt2.rows[idx - 1]?.debtFreeNetWorth ?? 0);
     if (prevDiff < 0 && diff >= 0) {
       crossoverYear = idx;
       break;
@@ -38,12 +41,13 @@ export function KapitalmotorRealizedChart() {
   return (
     <div className="rounded-xl border bg-card p-5">
       <div className="mb-1 text-xs uppercase tracking-wider text-muted-foreground">
-        Vad Alt 1 egentligen är värt — den uppskjutna skatten
+        Vad Alt 1 egentligen är värt — skuldfritt nettovärde
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        AF-kontot beskattas bara vid försäljning (30% på vinsten). "Realiserat netto" visar vad
-        det vore värt om det såldes det året, i stället för att aldrig säljas. 100 år,
-        logaritmisk skala.
+        Alla kurvor visar pengar i handen om lånet löses samma år: portfölj − lån, och för
+        "realiserat" även − 30% skatt på AF-vinsten (AF beskattas bara vid försäljning).
+        Lånen är olika stora i alternativen, så bruttoportföljer vore inte jämförbara.
+        100 år, logaritmisk skala.
       </p>
       <div className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -78,7 +82,7 @@ export function KapitalmotorRealizedChart() {
             <Line
               type="monotone"
               dataKey="book"
-              name="Alt 1 · bokfört (aldrig sälj)"
+              name="Alt 1 · skuldfritt bokfört (aldrig sälj)"
               stroke={COLORS.book}
               strokeWidth={2}
               strokeDasharray="5 3"
@@ -87,7 +91,7 @@ export function KapitalmotorRealizedChart() {
             <Line
               type="monotone"
               dataKey="realized"
-              name="Alt 1 · realiserat netto (−skatt på vinsten)"
+              name="Alt 1 · skuldfritt realiserat (−lån, −skatt på vinsten)"
               stroke={COLORS.realized}
               strokeWidth={2.5}
               dot={false}
@@ -95,7 +99,7 @@ export function KapitalmotorRealizedChart() {
             <Line
               type="monotone"
               dataKey="alt2"
-              name="Alt 2 · allt på ISK"
+              name="Alt 2 · allt på ISK, skuldfritt (−lån)"
               stroke={COLORS.alt2}
               strokeWidth={2.5}
               dot={false}
@@ -105,8 +109,8 @@ export function KapitalmotorRealizedChart() {
       </div>
       {crossoverYear ? (
         <div className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 p-2.5 text-xs text-amber-300">
-          Brytpunkt ≈ år {crossoverYear}: före det skulle Alt 2 (allt på ISK) faktiskt ge mer
-          pengar i handen om AF-kontot löstes in. Uppskjuten skatt lönar sig först på lång sikt.
+          Brytpunkt ≈ år {crossoverYear}: före det ger Alt 2 (allt på ISK) mer pengar i handen
+          om allt likvideras och lånet löses. Uppskjuten skatt lönar sig först på lång sikt.
         </div>
       ) : null}
     </div>

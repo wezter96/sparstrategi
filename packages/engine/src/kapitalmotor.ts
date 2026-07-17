@@ -11,8 +11,9 @@ import { interestDeduction, iskTax, iskTaxRate, netTax } from "./tax";
  *    means "lån = 20% av eget kapital" — convert via `L_total = L/(1+L)` if you
  *    need the equivalent `targetLtv` for `simulate.ts`.
  * 2. ISK is sized so its schablonskatt exactly equals the ränteavdrag on the
- *    loan (tax-neutral calibration: isk = deduction / iskTaxRate), not sized
- *    to cover a cashflow need.
+ *    loan (tax-neutral calibration: isk = deduction / iskTaxRate + fribelopp),
+ *    not sized to cover a cashflow need. The fribelopp is included because that
+ *    capital is tax-free on ISK but would accrue latent capital-gains tax on AF.
  * 3. Any surplus (ISK return − interest − net tax) either gets withdrawn as
  *    consumption (`withdraw: true`) or reinvested into AF (`withdraw: false`)
  *    — both behaviors reproduce the document's two named scenarios exactly
@@ -62,6 +63,10 @@ export interface KapitalmotorYear {
   afLatentTax: number;
   /** Vad portföljen är värd om AF säljs idag, netto efter reavinstskatt. */
   realizedNetWorth: number;
+  /** Skuldfritt nettovärde: portfölj − latent AF-skatt − lån. Pengar i handen
+   * om allt likvideras och lånet löses — rättvis jämförelsemetrik mellan
+   * alternativ som bär olika stora lån. */
+  debtFreeNetWorth: number;
 }
 
 export interface KapitalmotorResult {
@@ -92,6 +97,8 @@ const yearZero = (
   afBasis: basis,
   afLatentTax: Math.max(0, af - basis) * capitalGainsTaxRate,
   realizedNetWorth: af - Math.max(0, af - basis) * capitalGainsTaxRate + isk,
+  debtFreeNetWorth:
+    af - Math.max(0, af - basis) * capitalGainsTaxRate + isk - loan,
 });
 
 export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResult {
@@ -125,7 +132,10 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
   } else {
     const interest0 = loan0 * i;
     const deduction0 = interestDeduction(interest0, taxParams);
-    isk = te > 0 ? deduction0 / te : 0;
+    // Skatteneutralt maximum: schablonskatten på (isk − fribelopp) täcks exakt
+    // av ränteavdraget. Fribeloppet är skattefritt på ISK men skulle dra latent
+    // reavinstskatt på AF — därför alltid i ISK.
+    isk = te > 0 ? Math.min(total0, deduction0 / te + taxParams.iskFreeAmount) : 0;
     af = total0 - isk;
   }
   let loan = loan0;
@@ -174,6 +184,7 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
         afBasis: 0,
         afLatentTax: 0,
         realizedNetWorth: totalThisYear,
+        debtFreeNetWorth: totalThisYear - loanPrev,
       });
 
       // Prepare next year's carried-forward state (re-leverage happens here).
@@ -225,6 +236,7 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
       afBasis: basisThisYear,
       afLatentTax,
       realizedNetWorth: afThisYear - afLatentTax + iskPrev,
+      debtFreeNetWorth: afThisYear - afLatentTax + iskPrev - loanPrev,
     });
 
     // Prepare next year's carried-forward state (re-leverage happens here).
@@ -238,7 +250,7 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
       manualIskShare !== undefined
         ? manualIskShare * totalAfterLever
         : te > 0
-          ? deductionNext / te
+          ? Math.min(totalAfterLever, deductionNext / te + taxParams.iskFreeAmount)
           : 0;
     const iskTopUp = iskNew - iskPrev;
     const netAddLoanToAF = addLoan - iskTopUp;

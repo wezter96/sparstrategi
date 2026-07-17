@@ -19,15 +19,17 @@ export function KapitalmotorComparisonChart() {
   const alt1 = useAtomValue(alt1ReinvestAtom);
   const alt2 = useAtomValue(alt2ReinvestAtom);
 
+  // Skuldfritt eget kapital (portfölj − lån): lånen är olika stora i
+  // alternativen, så bruttoportföljer är inte jämförbara.
   const data = alt1.rows.map((row, idx) => ({
     year: row.year,
-    alt1: row.portfolio,
-    alt2: alt2.rows[idx]?.portfolio ?? null,
+    alt1: row.equity,
+    alt2: alt2.rows[idx]?.equity ?? null,
   }));
 
   const last1 = alt1.rows.at(-1);
   const last2 = alt2.rows.at(-1);
-  const diff = last1 && last2 ? last1.portfolio - last2.portfolio : 0;
+  const diff = last1 && last2 ? last1.equity - last2.equity : 0;
 
   return (
     <div className="rounded-xl border bg-card p-5">
@@ -36,6 +38,7 @@ export function KapitalmotorComparisonChart() {
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
         Inga uttag i något alternativ — isolerar den rena skatteeffekten av kontostrukturen.
+        Kurvorna visar skuldfritt eget kapital (portfölj minus lån).
       </p>
       <div className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -86,7 +89,8 @@ export function KapitalmotorComparisonChart() {
       </div>
       {last1 && last2 ? (
         <div className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-2.5 text-xs text-emerald-300">
-          Skillnad efter {last1.year} år: {fmtKr(diff)} mer i Alt 1, enbart av skatteskäl.
+          Skillnad efter {last1.year} år: {fmtKr(diff)} mer eget kapital i Alt 1, enbart av
+          skatteskäl. Obs: före latent AF-skatt — se skuldfritt realiserat nedan.
         </div>
       ) : null}
     </div>
