@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
 import { Button } from "@sparstrategi/ui/components/button";
-import { ArrowLeftIcon, Share2Icon } from "lucide-react";
+import { Share2Icon } from "lucide-react";
 import { toast } from "sonner";
 
 import { KapitalmotorComparisonChart } from "@/components/kapitalmotor/comparison-chart";
@@ -10,7 +10,6 @@ import { KapitalmotorKellyCard } from "@/components/kapitalmotor/kelly-card";
 import { KapitalmotorKpiRow } from "@/components/kapitalmotor/kpi-row";
 import { KapitalmotorRealizedChart } from "@/components/kapitalmotor/realized-chart";
 import { KapitalmotorTable } from "@/components/kapitalmotor/table";
-import { navigate } from "@/lib/router";
 import { kapitalmotorInputAtom, kapitalmotorShareUrl } from "@/state/kapitalmotor";
 
 export function KapitalmotorView() {
@@ -28,13 +27,6 @@ export function KapitalmotorView() {
     <div className="container mx-auto max-w-7xl px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <button
-            type="button"
-            onClick={() => navigate("start")}
-            className="mb-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeftIcon className="size-3" /> Alla verktyg
-          </button>
           <h1 className="text-2xl font-bold">Belånad Kapitalmotor</h1>
           <p className="text-sm text-muted-foreground">
             AF/ISK-uppdelning, belåning och holdingbolag — jämför strategier, dela resultatet.

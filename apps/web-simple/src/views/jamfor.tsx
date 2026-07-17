@@ -1,7 +1,7 @@
 import { useAtom } from "@effect/atom-react";
 import { defaultStrategyInput } from "@sparstrategi/engine";
 import { Button } from "@sparstrategi/ui/components/button";
-import { ArrowLeftIcon, PlusIcon, Share2Icon } from "lucide-react";
+import { PlusIcon, Share2Icon } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +10,7 @@ import { JamforChart } from "@/components/jamfor/jamfor-chart";
 import { JamforKpis } from "@/components/jamfor/jamfor-kpis";
 import { JamforTable } from "@/components/jamfor/jamfor-table";
 import { StrategyColumn } from "@/components/jamfor/strategy-column";
-import { navigate, useRoute } from "@/lib/router";
+import { useRoute } from "@/lib/router";
 import { templateById } from "@/lib/templates";
 import { comparisonInputAtom, comparisonShareUrl, fromTemplate } from "@/state/comparison";
 
@@ -45,13 +45,6 @@ export function JamforView() {
     <div className="container mx-auto max-w-7xl px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <button
-            type="button"
-            onClick={() => navigate("start")}
-            className="mb-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeftIcon className="size-3" /> Alla verktyg
-          </button>
           <h1 className="text-2xl font-bold">{template.title}</h1>
           <p className="text-sm text-muted-foreground">{template.question}</p>
         </div>

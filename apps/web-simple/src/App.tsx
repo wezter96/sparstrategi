@@ -1,6 +1,7 @@
 import { Toaster } from "@sparstrategi/ui/components/sonner";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { TopNav } from "@/components/top-nav";
 import { useRoute } from "@/lib/router";
 import { JamforView } from "@/views/jamfor";
 import { KapitalmotorView } from "@/views/kapitalmotor";
@@ -15,6 +16,7 @@ export default function App() {
       disableTransitionOnChange
       storageKey="vite-ui-theme"
     >
+      <TopNav route={route} />
       {route.view === "kapitalmotor" ? (
         <KapitalmotorView />
       ) : route.view === "jamfor" ? (
