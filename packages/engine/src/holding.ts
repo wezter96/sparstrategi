@@ -57,6 +57,8 @@ export interface HoldingInput {
   /** true = ta ut gränsbeloppet som utdelning varje år. false = allt stannar i bolaget. */
   extractDividends: boolean;
   capitalGainsRatePrivate: number;
+  /** Löpande nytt sparande, tillförs bolagets depå-del varje år (default 0). */
+  monthlySavings: number;
 }
 
 export interface HoldingYear {
@@ -90,6 +92,7 @@ const corporateInterestDeduction = (interest: number, p: HoldingTaxParams): numb
 export function simulateHolding(input: HoldingInput): ReadonlyArray<HoldingYear> {
   const { equity, targetLtvOfEquity: L, expectedReturn: r, loanRate: i, taxParams: p, horizonYears } =
     input;
+  const savingsAdded = 12 * input.monthlySavings;
 
   /** Schablonintäkt (SLR + 1pp, floor 1,25%) taxed at the corporate rate instead of 30%. */
   const kfTaxRate = Math.max(p.slr + 0.01, 0.0125) * p.corporateTaxRate;
@@ -147,7 +150,7 @@ export function simulateHolding(input: HoldingInput): ReadonlyArray<HoldingYear>
     let dividendWithinLimit = 0;
     let dividendAboveLimit = 0;
     let dividendTax = 0;
-    let vpAfterSurplus = vpOrganic + surplus;
+    let vpAfterSurplus = vpOrganic + surplus + savingsAdded;
     let extractedNet = 0;
 
     if (input.extractDividends) {
@@ -177,7 +180,7 @@ export function simulateHolding(input: HoldingInput): ReadonlyArray<HoldingYear>
     const netAddLoanToVp = addLoan - kfTopUp;
     const vpNew = totalAfterLever - kfNew;
 
-    vpBasis += netAddLoanToVp;
+    vpBasis += netAddLoanToVp + savingsAdded;
     vp = vpNew;
     kf = kfNew;
     loan = loanNew;

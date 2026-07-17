@@ -13,6 +13,7 @@ const base: MonteCarloInput = {
   capitalGainsTaxRate: 0.3,
   maxLtvOfTotal: 0.6,
   withdraw: false,
+  monthlySavings: 0,
   paths: 500,
   seed: 42,
 };

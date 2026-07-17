@@ -1,4 +1,5 @@
 import { useAtom } from "@effect/atom-react";
+import { Button } from "@sparstrategi/ui/components/button";
 import { Checkbox } from "@sparstrategi/ui/components/checkbox";
 import { Label } from "@sparstrategi/ui/components/label";
 import { NumberField } from "@sparstrategi/ui/components/number-field";
@@ -9,6 +10,7 @@ export function KapitalmotorInputPanel() {
   const [input, setInput] = useAtom(kapitalmotorInputAtom);
   const set = <K extends keyof KapitalmotorUiInput>(key: K, value: KapitalmotorUiInput[K]) =>
     setInput({ ...input, [key]: value });
+  const isManual = input.manualIskSharePct !== undefined;
 
   return (
     <aside className="space-y-4">
@@ -96,6 +98,45 @@ export function KapitalmotorInputPanel() {
         />
         <Label className="text-xs">Holdingbolag: ta ut gränsbelopp som utdelning varje år</Label>
       </div>
+
+      <div className="space-y-2 border-t pt-3">
+        <Label className="text-xs text-muted-foreground">Fördelning AF/ISK (Alt 1)</Label>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant={isManual ? "outline" : "default"}
+            size="sm"
+            onClick={() => setInput({ ...input, manualIskSharePct: undefined })}
+          >
+            Auto (skatteneutral)
+          </Button>
+          <Button
+            type="button"
+            variant={isManual ? "default" : "outline"}
+            size="sm"
+            onClick={() => set("manualIskSharePct", input.manualIskSharePct ?? 13.3)}
+          >
+            Manuell
+          </Button>
+        </div>
+        {isManual ? (
+          <NumberField
+            label="ISK-andel av totalen (%)"
+            value={input.manualIskSharePct ?? 0}
+            onChange={(v) => set("manualIskSharePct", Math.min(100, Math.max(0, v)))}
+            min={0}
+            max={100}
+            step={1}
+            suffix="%"
+          />
+        ) : null}
+        <p className="text-xs text-muted-foreground">
+          Auto räknar ut den ISK-andel som gör nettoskatten exakt 0 kr. En manuell andel — för
+          liten eller för stor — ger nästan alltid en positiv effektiv skattesats, eftersom
+          ränteavdraget då inte längre matchar ISK-schablonskatten exakt.
+        </p>
+      </div>
+
       <p className="text-xs text-muted-foreground">
         Skatteparametrar (ISK-schablonskatt, ränteavdrag, bolagsskatt, 3:12-gränsbelopp) använder
         2026 års standardvärden. Belåningsgraden avser lån / eget kapital — inte lån / total

@@ -22,6 +22,8 @@ export interface MonteCarloInput {
   maxLtvOfTotal: number;
   /** true = ta ut hållbart uttag varje år (som huvudtabellen); false = allt återinvesteras. */
   withdraw: boolean;
+  /** Löpande nytt sparande utöver grundkapitalet, tillförs AF-kontot varje år (default 0). */
+  monthlySavings: number;
   paths: number;
   seed: number;
 }
@@ -79,12 +81,14 @@ export function simulateMonteCarlo(input: MonteCarloInput): MonteCarloResult {
     horizonYears,
     withdraw,
     maxLtvOfTotal,
+    monthlySavings,
     paths,
     seed,
   } = input;
   const te = iskTaxRate(taxParams);
   const rand = mulberry32(seed);
   const driftAdj = Math.log(1 + mu) - 0.5 * sigma * sigma;
+  const savingsAdded = 12 * monthlySavings;
 
   // portfolio[year][pathIndex]
   const portfolioByYear: number[][] = Array.from({ length: horizonYears + 1 }, () => []);
@@ -130,6 +134,7 @@ export function simulateMonteCarlo(input: MonteCarloInput): MonteCarloResult {
       const afOrganic = afPrev * (1 + r);
       let afThisYear = afOrganic;
       if (!withdraw) afThisYear = afOrganic + surplus;
+      afThisYear += savingsAdded;
 
       const totalThisYear = afThisYear + iskPrev;
       const equityThisYear = totalThisYear - loanPrev;

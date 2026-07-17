@@ -35,6 +35,9 @@ export interface KapitalmotorInput {
   capitalGainsTaxRate: number;
   /** Löpande nytt sparande utöver grundkapitalet, tillförs AF-kontot varje år (default 0). */
   monthlySavings: number;
+  /** Manuell ISK-andel (0–1) av totalen, i "split"-läge. Utelämnad ⇒ skatteneutral
+   * autokalibrering (isk = ränteavdrag / ISK-skattesats), som i dokumentet. */
+  manualIskShare?: number;
 }
 
 export interface KapitalmotorYear {
@@ -103,6 +106,7 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
     withdraw,
     capitalGainsTaxRate,
     monthlySavings,
+    manualIskShare,
   } = input;
   const savingsAdded = 12 * monthlySavings;
   const te = iskTaxRate(taxParams);
@@ -115,6 +119,9 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
   if (mode === "allIsk") {
     af = 0;
     isk = total0;
+  } else if (manualIskShare !== undefined) {
+    isk = manualIskShare * total0;
+    af = total0 - isk;
   } else {
     const interest0 = loan0 * i;
     const deduction0 = interestDeduction(interest0, taxParams);
@@ -227,7 +234,12 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
 
     const interestNext = loanNew * i;
     const deductionNext = interestDeduction(interestNext, taxParams);
-    const iskNew = te > 0 ? deductionNext / te : 0;
+    const iskNew =
+      manualIskShare !== undefined
+        ? manualIskShare * totalAfterLever
+        : te > 0
+          ? deductionNext / te
+          : 0;
     const iskTopUp = iskNew - iskPrev;
     const netAddLoanToAF = addLoan - iskTopUp;
     const afNew = totalAfterLever - iskNew;

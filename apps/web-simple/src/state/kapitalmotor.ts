@@ -25,6 +25,8 @@ export interface KapitalmotorUiInput {
   volatility: number;
   maxLtvOfTotal: number;
   monthlySavings: number;
+  /** Manuell ISK-andel (0–100 %). undefined ⇒ skatteneutral autokalibrering. */
+  manualIskSharePct?: number;
 }
 
 export const defaultKapitalmotorUiInput: KapitalmotorUiInput = {
@@ -80,6 +82,8 @@ const toEngineInput = (
   withdraw,
   capitalGainsTaxRate: ui.capitalGainsTaxRate,
   monthlySavings: ui.monthlySavings,
+  manualIskShare:
+    ui.manualIskSharePct !== undefined ? ui.manualIskSharePct / 100 : undefined,
 });
 
 /** Alt 1, uttagsläge (dokumentets "Tillväxt över tid"). */
@@ -139,6 +143,7 @@ export const monteCarloAtom = Atom.make((get) => {
     capitalGainsTaxRate: ui.capitalGainsTaxRate,
     maxLtvOfTotal: ui.maxLtvOfTotal,
     withdraw: false,
+    monthlySavings: ui.monthlySavings,
     paths: defaultMonteCarloPaths,
     seed: 20260717,
   };
@@ -156,6 +161,7 @@ export const holdingAtom = Atom.make((get) => {
     horizonYears: ui.horizonYears,
     extractDividends: ui.extractDividends,
     capitalGainsRatePrivate: ui.capitalGainsTaxRate,
+    monthlySavings: ui.monthlySavings,
   };
   return simulateHolding(input);
 });
