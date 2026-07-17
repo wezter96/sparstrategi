@@ -15,7 +15,7 @@ export interface ComparisonUiInput {
   strategies: StrategyInput[];
 }
 
-const fromTemplate = (id: string): ComparisonUiInput => {
+export const fromTemplate = (id: string): ComparisonUiInput => {
   const t = templateById(id);
   return {
     templateId: t.id,
@@ -48,7 +48,7 @@ const parse = (s: string): ComparisonUiInput | null => {
 
 /** Jämförelsens dela-payload bor i `?j=` — krockar aldrig med kapitalmotorns `?s=`. */
 export const comparisonShareUrl = (input: ComparisonUiInput): string =>
-  `${window.location.origin}${window.location.pathname}?j=${encodeURIComponent(serialize(input))}#/jamfor`;
+  `${window.location.origin}${window.location.pathname}?j=${encodeURIComponent(serialize(input))}#/jamfor/${input.templateId}`;
 
 const initialInput = (): ComparisonUiInput => {
   if (typeof window !== "undefined") {
@@ -68,15 +68,3 @@ export const comparisonResultsAtom = Atom.make((get): StrategyResult[] => {
     input.strategies,
   );
 });
-
-/** Sätts av mallkorten på startsidan innan navigering till #/jamfor. */
-let pendingTemplate: string | null = null;
-export const loadTemplate = (id: string): void => {
-  pendingTemplate = id;
-};
-export const consumePendingTemplate = (): ComparisonUiInput | null => {
-  if (pendingTemplate === null) return null;
-  const input = fromTemplate(pendingTemplate);
-  pendingTemplate = null;
-  return input;
-};

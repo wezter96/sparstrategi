@@ -1,13 +1,13 @@
 import { Toaster } from "@sparstrategi/ui/components/sonner";
 
 import { ThemeProvider } from "@/components/theme-provider";
-import { useView } from "@/lib/router";
+import { useRoute } from "@/lib/router";
 import { JamforView } from "@/views/jamfor";
 import { KapitalmotorView } from "@/views/kapitalmotor";
 import { StartView } from "@/views/start";
 
 export default function App() {
-  const view = useView();
+  const route = useRoute();
   return (
     <ThemeProvider
       attribute="class"
@@ -15,9 +15,9 @@ export default function App() {
       disableTransitionOnChange
       storageKey="vite-ui-theme"
     >
-      {view === "kapitalmotor" ? (
+      {route.view === "kapitalmotor" ? (
         <KapitalmotorView />
-      ) : view === "jamfor" ? (
+      ) : route.view === "jamfor" ? (
         <JamforView />
       ) : (
         <StartView />

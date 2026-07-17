@@ -2,31 +2,40 @@ import { useEffect, useState } from "react";
 
 export type View = "start" | "jamfor" | "kapitalmotor";
 
-export const parseHash = (hash: string): View => {
-  if (hash.startsWith("#/kapitalmotor")) return "kapitalmotor";
-  if (hash.startsWith("#/jamfor")) return "jamfor";
-  return "start";
+export interface Route {
+  view: View;
+  /** Endast jamfor: mall-id ur hashen, t.ex. #/jamfor/avgift. */
+  templateId?: string;
+}
+
+export const parseHash = (hash: string): Route => {
+  if (hash.startsWith("#/kapitalmotor")) return { view: "kapitalmotor" };
+  if (hash.startsWith("#/jamfor")) {
+    const id = hash.replace(/^#\//, "").split("/")[1];
+    return id ? { view: "jamfor", templateId: id } : { view: "jamfor" };
+  }
+  return { view: "start" };
 };
 
 /** Gamla dela-länkar (`?s=` utan hash) ska fortsätta öppna Kapitalmotorn. */
-const initialView = (): View => {
-  const byHash = parseHash(window.location.hash);
+const initialRoute = (): Route => {
   if (window.location.hash === "" && new URLSearchParams(window.location.search).has("s")) {
-    return "kapitalmotor";
+    return { view: "kapitalmotor" };
   }
-  return byHash;
+  return parseHash(window.location.hash);
 };
 
-export const navigate = (view: View): void => {
-  window.location.hash = view === "start" ? "#/" : `#/${view}`;
+export const navigate = (view: View, templateId?: string): void => {
+  window.location.hash =
+    view === "start" ? "#/" : templateId ? `#/${view}/${templateId}` : `#/${view}`;
 };
 
-export function useView(): View {
-  const [view, setView] = useState<View>(initialView);
+export function useRoute(): Route {
+  const [route, setRoute] = useState<Route>(initialRoute);
   useEffect(() => {
-    const onChange = () => setView(parseHash(window.location.hash));
+    const onChange = () => setRoute(parseHash(window.location.hash));
     window.addEventListener("hashchange", onChange);
     return () => window.removeEventListener("hashchange", onChange);
   }, []);
-  return view;
+  return route;
 }

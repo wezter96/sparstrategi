@@ -1,6 +1,5 @@
 import { navigate } from "@/lib/router";
 import { templates } from "@/lib/templates";
-import { loadTemplate } from "@/state/comparison";
 
 export function StartView() {
   return (
@@ -15,10 +14,7 @@ export function StartView() {
           <button
             key={t.id}
             type="button"
-            onClick={() => {
-              loadTemplate(t.id);
-              navigate("jamfor");
-            }}
+            onClick={() => navigate("jamfor", t.id)}
             className="rounded-xl border bg-card p-5 text-left transition-colors hover:border-emerald-400/50"
           >
             <div className="text-sm font-semibold">{t.title}</div>

@@ -10,22 +10,20 @@ import { JamforChart } from "@/components/jamfor/jamfor-chart";
 import { JamforKpis } from "@/components/jamfor/jamfor-kpis";
 import { JamforTable } from "@/components/jamfor/jamfor-table";
 import { StrategyColumn } from "@/components/jamfor/strategy-column";
-import { navigate } from "@/lib/router";
+import { navigate, useRoute } from "@/lib/router";
 import { templateById } from "@/lib/templates";
-import {
-  comparisonInputAtom,
-  comparisonShareUrl,
-  consumePendingTemplate,
-} from "@/state/comparison";
+import { comparisonInputAtom, comparisonShareUrl, fromTemplate } from "@/state/comparison";
 
 export function JamforView() {
   const [input, setInput] = useAtom(comparisonInputAtom);
   const template = templateById(input.templateId);
+  const route = useRoute();
 
   useEffect(() => {
-    const pending = consumePendingTemplate();
-    if (pending) setInput(pending);
-  }, [setInput]);
+    if (route.view !== "jamfor" || !route.templateId) return;
+    const target = templateById(route.templateId).id;
+    if (target !== input.templateId) setInput(fromTemplate(target));
+  }, [route, input.templateId, setInput]);
 
   const handleShare = () => {
     navigator.clipboard
