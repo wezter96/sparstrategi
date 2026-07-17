@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { defaultTaxParams2026 } from "../src/schema";
 import {
+  compareStrategies,
   defaultStrategyInput,
   simulateStrategy,
   type ComparisonAssumptions,
@@ -220,5 +221,29 @@ describe("transaktionskostnader", () => {
     // Enda skatten är schablon.
     const noRebal = simulateStrategy(a, { ...s, rebalancesPerYear: 0, turnoverShare: 0 });
     expect(r.final.paidTax).toBeCloseTo(noRebal.final.paidTax, 6);
+  });
+});
+
+describe("compareStrategies och insättningsöverstyrning", () => {
+  test("kör N strategier med samma antaganden och bevarar ordning/namn", () => {
+    const rs = compareStrategies(assumptions(), [
+      frictionFree({ name: "a" }),
+      frictionFree({ name: "b", fundFeeRate: 0.015 }),
+    ]);
+    expect(rs.map((r) => r.name)).toEqual(["a", "b"]);
+    expect(rs[0]!.final.value).toBeGreaterThan(rs[1]!.final.value);
+  });
+
+  test("engångsköp slår månadssparande vid positiv avkastning (deterministisk DCA-jämförelse)", () => {
+    const a = assumptions({ startCapital: 0, monthlySavings: 5_000, horizonYears: 10 });
+    const [lump, dca] = compareStrategies(a, [
+      frictionFree({
+        name: "engång",
+        startCapitalOverride: 5_000 * 12 * 10,
+        monthlySavingsOverride: 0,
+      }),
+      frictionFree({ name: "dca" }),
+    ]);
+    expect(lump!.final.value).toBeGreaterThan(dca!.final.value);
   });
 });

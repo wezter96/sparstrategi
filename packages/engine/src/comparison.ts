@@ -237,3 +237,8 @@ export function simulateStrategy(
     },
   };
 }
+
+export const compareStrategies = (
+  a: ComparisonAssumptions,
+  strategies: ReadonlyArray<StrategyInput>,
+): StrategyResult[] => strategies.map((s) => simulateStrategy(a, s));

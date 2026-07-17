@@ -8,3 +8,4 @@ export * from "./kapitalmotor";
 export * from "./holding";
 export * from "./kelly";
 export * from "./montecarlo";
+export * from "./comparison";
