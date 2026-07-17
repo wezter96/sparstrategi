@@ -57,7 +57,7 @@ const parse = (s: string): KapitalmotorUiInput | null => {
 // Standalone single-page app: share the current page (origin + path, e.g. the
 // GitHub Pages project path) rather than a `/kapitalmotor` sub-route.
 export const kapitalmotorShareUrl = (input: KapitalmotorUiInput): string =>
-  `${window.location.origin}${window.location.pathname}?s=${encodeURIComponent(serialize(input))}`;
+  `${window.location.origin}${window.location.pathname}?s=${encodeURIComponent(serialize(input))}#/kapitalmotor`;
 
 const initialInput = (): KapitalmotorUiInput => {
   if (typeof window === "undefined") return defaultKapitalmotorUiInput;
