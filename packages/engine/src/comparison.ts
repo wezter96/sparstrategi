@@ -1,5 +1,5 @@
 import type { TaxParams } from "./schema";
-import { iskTax, iskTaxRate } from "./tax";
+import { interestDeduction, iskTax, iskTaxRate, netTax } from "./tax";
 
 /**
  * Generell jämförelsemotor: N strategier med identiska insättningar simuleras
@@ -51,6 +51,10 @@ export interface StrategyInput {
   monthlySavingsOverride?: number;
   /** Antal år utan månadsinsättningar (0 = spara från år 1). Mallen "tidigt". */
   savingsStartYear?: number;
+  /** Belåningsgrad = lån / eget kapital (kapitalmotorns konvention). Återbelånas årligen. */
+  leverageOfEquity?: number;
+  /** Ränta på lånet. Ränteavdrag (30/21 %) nettas mot schablonskatten. */
+  loanRate?: number;
 }
 
 export interface StrategyYear {
@@ -153,6 +157,9 @@ export function simulateStrategy(
 
   const rows: StrategyYear[] = [mkRow(0)];
 
+  const lev = s.leverageOfEquity ?? 0;
+  const loanRate = s.loanRate ?? 0;
+
   for (let year = 1; year <= a.horizonYears; year++) {
     // 1. Insättningar (0 t.o.m. savingsStartYear)
     const monthlyThisYear = year > (s.savingsStartYear ?? 0) ? monthly : 0;
@@ -161,24 +168,28 @@ export function simulateStrategy(
     const netDeposits = deposits - depositCost;
     paidTransactionCosts += depositCost;
 
-    // 2. Avkastning och avgift
+    // 2. Avkastning och avgift på exponerat belopp (eget kapital + lån)
     const capStart = value;
-    const mid = capStart + netDeposits / 2;
+    const loan = lev * Math.max(0, capStart);
+    const exposed = capStart + loan;
+    const mid = exposed + netDeposits / 2;
     const fee = s.fundFeeRate * mid;
     const appreciation = s.priceGrowth * mid;
     const dividends = s.dividendYield * mid;
+    const interest = loanRate * loan;
     paidFees += fee;
 
-    let newValue = capStart + netDeposits + appreciation - fee;
+    let newValue = capStart + netDeposits + appreciation - fee - interest;
     basis += netDeposits;
 
-    // 3. Schablonskatt på årets ingående kapital.
-    const schablon =
+    // 3. Schablonskatt på exponerat ingående kapital, nettad mot ränteavdrag.
+    const grossSchablon =
       s.accountType === "isk"
-        ? iskTax(capStart, p)
+        ? iskTax(exposed, p)
         : s.accountType === "kf"
-          ? Math.max(0, capStart) * iskTaxRate(p)
+          ? Math.max(0, exposed) * iskTaxRate(p)
           : 0;
+    const schablon = netTax(grossSchablon, interestDeduction(interest, p)).net;
     newValue -= schablon;
     paidTax += schablon;
 

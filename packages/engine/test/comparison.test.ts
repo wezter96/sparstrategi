@@ -267,3 +267,42 @@ describe("savingsStartYear", () => {
     expect(r.rows[1]!.value).toBeGreaterThan(0);
   });
 });
+
+describe("belåning", () => {
+  test("utan skatt/avgifter: value = start × (1 + (1+L)·g − L·i)^n", () => {
+    const a = assumptions({ startCapital: 100_000, monthlySavings: 0, horizonYears: 10 });
+    const r = simulateStrategy(
+      a,
+      frictionFree({ leverageOfEquity: 0.2, loanRate: 0.04 }),
+    );
+    const expected = 100_000 * Math.pow(1 + 1.2 * 0.07 - 0.2 * 0.04, 10);
+    expect(r.rows.at(-1)!.value).toBeCloseTo(expected, 4);
+  });
+
+  test("ISK: schablon beräknas på exponerat belopp och nettas mot ränteavdraget", () => {
+    const a = assumptions({ startCapital: 1_000_000, monthlySavings: 0, horizonYears: 1 });
+    const s: StrategyInput = {
+      ...defaultStrategyInput("belånad isk"),
+      fundFeeRate: 0,
+      priceGrowth: 0,
+      leverageOfEquity: 0.2,
+      loanRate: 0.04,
+    };
+    const r = simulateStrategy(a, s);
+    const loan = 200_000;
+    const interest = 0.04 * loan;
+    const p = defaultTaxParams2026;
+    const grossSchablon =
+      Math.max(0, 1_200_000 - p.iskFreeAmount) * (Math.max(p.slr + 0.01, 0.0125) * 0.3);
+    const expectedTax = Math.max(0, grossSchablon - 0.3 * interest);
+    expect(r.final.paidTax).toBeCloseTo(expectedTax, 2);
+  });
+
+  test("leverageOfEquity 0 ändrar ingenting", () => {
+    const a = assumptions({ monthlySavings: 2_000 });
+    const base = simulateStrategy(a, frictionFree());
+    const zero = simulateStrategy(a, frictionFree({ leverageOfEquity: 0, loanRate: 0.04 }));
+    expect(zero.final.value).toBe(base.final.value);
+    expect(zero.final.paidTax).toBe(base.final.paidTax);
+  });
+});
