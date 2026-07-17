@@ -109,15 +109,21 @@ export const defaultStrategyInput = (name: string): StrategyInput => ({
   spreadRate: 0,
 });
 
+export interface SimulateStrategyOptions {
+  /** Årsvisa kursutvecklingar (index 0 = år 1) som ersätter `s.priceGrowth` —
+   * används av Monte Carlo. Utelämnade år faller tillbaka på `s.priceGrowth`. */
+  priceGrowthByYear?: ReadonlyArray<number>;
+}
+
 export function simulateStrategy(
   a: ComparisonAssumptions,
   s: StrategyInput,
+  opts?: SimulateStrategyOptions,
 ): StrategyResult {
   const start = s.startCapitalOverride ?? a.startCapital;
   const monthly = s.monthlySavingsOverride ?? a.monthlySavings;
   const p = a.taxParams;
   const gainsRate = p.afCapitalGainsRate;
-  const totalReturn = s.priceGrowth + s.dividendYield;
 
   /** Kostnad för ett köp om `amount` kr fördelat över alla innehav. */
   const tradeCost = (amount: number): number => {
@@ -172,9 +178,10 @@ export function simulateStrategy(
     const capStart = value;
     const loan = lev * Math.max(0, capStart);
     const exposed = capStart + loan;
+    const growthRate = opts?.priceGrowthByYear?.[year - 1] ?? s.priceGrowth;
     const mid = exposed + netDeposits / 2;
     const fee = s.fundFeeRate * mid;
-    const appreciation = s.priceGrowth * mid;
+    const appreciation = growthRate * mid;
     const dividends = s.dividendYield * mid;
     const interest = loanRate * loan;
     paidFees += fee;
@@ -231,8 +238,9 @@ export function simulateStrategy(
     }
 
     value = Math.max(0, newValue);
+    const totalReturnThisYear = growthRate + s.dividendYield;
     frictionless =
-      frictionless * (1 + totalReturn) + deposits * (1 + totalReturn / 2);
+      frictionless * (1 + totalReturnThisYear) + deposits * (1 + totalReturnThisYear / 2);
     rows.push(mkRow(year));
   }
 

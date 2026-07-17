@@ -9,3 +9,6 @@ export * from "./holding";
 export * from "./kelly";
 export * from "./montecarlo";
 export * from "./comparison";
+export * from "./withdrawal";
+export * from "./comparison-goals";
+export * from "./comparison-montecarlo";
