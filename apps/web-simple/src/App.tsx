@@ -6,6 +6,7 @@ import { useRoute } from "@/lib/router";
 import { JamforView } from "@/views/jamfor";
 import { KapitalmotorView } from "@/views/kapitalmotor";
 import { StartView } from "@/views/start";
+import { UttagView } from "@/views/uttag";
 
 export default function App() {
   const route = useRoute();
@@ -21,6 +22,8 @@ export default function App() {
         <KapitalmotorView />
       ) : route.view === "jamfor" ? (
         <JamforView />
+      ) : route.view === "uttag" ? (
+        <UttagView />
       ) : (
         <StartView />
       )}

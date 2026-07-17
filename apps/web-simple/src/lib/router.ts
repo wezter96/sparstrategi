@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type View = "start" | "jamfor" | "kapitalmotor";
+export type View = "start" | "jamfor" | "kapitalmotor" | "uttag";
 
 export interface Route {
   view: View;
@@ -10,6 +10,7 @@ export interface Route {
 
 export const parseHash = (hash: string): Route => {
   if (hash.startsWith("#/kapitalmotor")) return { view: "kapitalmotor" };
+  if (hash.startsWith("#/uttag")) return { view: "uttag" };
   if (hash.startsWith("#/jamfor")) {
     const id = hash.replace(/^#\//, "").split("/")[1];
     // Utelämnat id lämnas medvetet undefined så att en `?j=`-payload utan

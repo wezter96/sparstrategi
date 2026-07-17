@@ -30,6 +30,14 @@ export function TopNav({ route }: { route: Route }) {
         >
           Kapitalmotor
         </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={route.view === "uttag" ? "secondary" : "ghost"}
+          onClick={() => navigate("uttag")}
+        >
+          Uttag
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
             className={`inline-flex h-8 items-center gap-1 rounded-md px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground ${

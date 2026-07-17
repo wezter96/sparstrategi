@@ -1,3 +1,4 @@
+import { SavedList } from "@/components/saved-list";
 import { navigate } from "@/lib/router";
 import { templates } from "@/lib/templates";
 
@@ -23,6 +24,17 @@ export function StartView() {
         ))}
         <button
           type="button"
+          onClick={() => navigate("uttag")}
+          className="rounded-xl border bg-card p-5 text-left transition-colors hover:border-emerald-400/50"
+        >
+          <div className="text-sm font-semibold">Hur länge räcker kapitalet?</div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Uttagsfasen: löpande uttag med inflation och skatt per kontotyp — 4 %-regeln i
+            praktiken.
+          </p>
+        </button>
+        <button
+          type="button"
           onClick={() => navigate("kapitalmotor")}
           className="rounded-xl border border-dashed bg-card p-5 text-left transition-colors hover:border-emerald-400/50"
         >
@@ -32,6 +44,7 @@ export function StartView() {
           </p>
         </button>
       </div>
+      <SavedList />
       <footer className="mt-10 text-xs text-muted-foreground">
         Illustrativa räkneexempel, inte finansiell rådgivning.
       </footer>
