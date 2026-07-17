@@ -254,7 +254,7 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
 }
 
 export const defaultKapitalmotorInput = (taxParams: TaxParams): KapitalmotorInput => ({
-  equity: 5_000_000_000,
+  equity: 5_000_000,
   targetLtvOfEquity: 0.2,
   expectedReturn: 0.08,
   loanRate: 0.04,
