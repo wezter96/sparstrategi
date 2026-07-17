@@ -18,6 +18,7 @@ const base: KapitalmotorInput = {
   mode: "split",
   withdraw: true,
   capitalGainsTaxRate: 0.3,
+  monthlySavings: 0,
 };
 
 describe("Alt 1 · split, withdraw (Tillväxt över tid-tabellen)", () => {

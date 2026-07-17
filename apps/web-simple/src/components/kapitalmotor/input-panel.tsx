@@ -21,6 +21,14 @@ export function KapitalmotorInputPanel() {
         step={1_000_000}
       />
       <NumberField
+        label="Löpande sparande (kr/mån)"
+        value={input.monthlySavings}
+        onChange={(v) => set("monthlySavings", v)}
+        min={0}
+        max={10_000_000}
+        step={1_000}
+      />
+      <NumberField
         label="Belåningsgrad, av eget kapital (%)"
         value={input.targetLtvOfEquity * 100}
         onChange={(v) => set("targetLtvOfEquity", v / 100)}

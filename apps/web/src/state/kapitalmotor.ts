@@ -24,6 +24,7 @@ export interface KapitalmotorUiInput {
   extractDividends: boolean;
   volatility: number;
   maxLtvOfTotal: number;
+  monthlySavings: number;
 }
 
 export const defaultKapitalmotorUiInput: KapitalmotorUiInput = {
@@ -36,6 +37,7 @@ export const defaultKapitalmotorUiInput: KapitalmotorUiInput = {
   extractDividends: true,
   volatility: defaultVolatility,
   maxLtvOfTotal: 0.6,
+  monthlySavings: 0,
 };
 
 const serialize = (input: KapitalmotorUiInput): string =>
@@ -75,6 +77,7 @@ const toEngineInput = (
   mode,
   withdraw,
   capitalGainsTaxRate: ui.capitalGainsTaxRate,
+  monthlySavings: ui.monthlySavings,
 });
 
 /** Alt 1, uttagsläge (dokumentets "Tillväxt över tid"). */

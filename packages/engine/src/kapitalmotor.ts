@@ -33,6 +33,8 @@ export interface KapitalmotorInput {
   withdraw: boolean;
   /** Svensk kapitalvinstskatt på realiserad AF-vinst (normalt 0.30). */
   capitalGainsTaxRate: number;
+  /** Löpande nytt sparande utöver grundkapitalet, tillförs AF-kontot varje år (default 0). */
+  monthlySavings: number;
 }
 
 export interface KapitalmotorYear {
@@ -100,7 +102,9 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
     mode,
     withdraw,
     capitalGainsTaxRate,
+    monthlySavings,
   } = input;
+  const savingsAdded = 12 * monthlySavings;
   const te = iskTaxRate(taxParams);
 
   const loan0 = equity * L;
@@ -143,7 +147,7 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
       const surplus = totalReturn - interest - net;
 
       const consumption = withdraw ? surplus : 0;
-      const totalThisYear = withdraw ? totalPrev : totalPrev + surplus;
+      const totalThisYear = (withdraw ? totalPrev : totalPrev + surplus) + savingsAdded;
       const equityThisYear = totalThisYear - loanPrev;
 
       rows.push({
@@ -191,6 +195,8 @@ export function simulateKapitalmotor(input: KapitalmotorInput): KapitalmotorResu
       afThisYear = afOrganic + surplus;
       basisThisYear = basis + surplus;
     }
+    afThisYear += savingsAdded;
+    basisThisYear += savingsAdded;
 
     const equityThisYear = afThisYear + iskPrev - loanPrev;
     const afLatentTax = Math.max(0, afThisYear - basisThisYear) * capitalGainsTaxRate;
@@ -245,4 +251,5 @@ export const defaultKapitalmotorInput = (taxParams: TaxParams): KapitalmotorInpu
   mode: "split",
   withdraw: true,
   capitalGainsTaxRate: 0.3,
+  monthlySavings: 0,
 });
