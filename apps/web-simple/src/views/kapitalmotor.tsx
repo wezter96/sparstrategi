@@ -1,6 +1,6 @@
 import { useAtomValue } from "@effect/atom-react";
 import { Button } from "@sparstrategi/ui/components/button";
-import { Share2Icon } from "lucide-react";
+import { BookmarkIcon, Share2Icon } from "lucide-react";
 import { toast } from "sonner";
 
 import { KapitalmotorComparisonChart } from "@/components/kapitalmotor/comparison-chart";
@@ -10,7 +10,12 @@ import { KapitalmotorKellyCard } from "@/components/kapitalmotor/kelly-card";
 import { KapitalmotorKpiRow } from "@/components/kapitalmotor/kpi-row";
 import { KapitalmotorRealizedChart } from "@/components/kapitalmotor/realized-chart";
 import { KapitalmotorTable } from "@/components/kapitalmotor/table";
-import { kapitalmotorInputAtom, kapitalmotorShareUrl } from "@/state/kapitalmotor";
+import { saveScenario } from "@/lib/saved";
+import {
+  kapitalmotorInputAtom,
+  kapitalmotorShareUrl,
+  serializeKapitalmotor,
+} from "@/state/kapitalmotor";
 
 export function KapitalmotorView() {
   const input = useAtomValue(kapitalmotorInputAtom);
@@ -32,10 +37,25 @@ export function KapitalmotorView() {
             AF/ISK-uppdelning, belåning och holdingbolag — jämför strategier, dela resultatet.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleShare}>
-          <Share2Icon className="size-3.5" />
-          Dela
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const name = window.prompt("Namn på scenariot?", "Kapitalmotor");
+              if (!name) return;
+              saveScenario({ name, kind: "kapitalmotor", payload: serializeKapitalmotor(input) });
+              toast.success("Scenario sparat — finns på startsidan");
+            }}
+          >
+            <BookmarkIcon className="size-3.5" aria-hidden />
+            Spara
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleShare}>
+            <Share2Icon className="size-3.5" aria-hidden />
+            Dela
+          </Button>
+        </div>
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
         <KapitalmotorInputPanel />

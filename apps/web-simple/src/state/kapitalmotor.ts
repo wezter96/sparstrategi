@@ -25,6 +25,10 @@ export interface KapitalmotorUiInput {
   volatility: number;
   maxLtvOfTotal: number;
   monthlySavings: number;
+  /** Inflationsantagande för visning i dagens penningvärde. */
+  inflation: number;
+  /** true ⇒ tabell och grafer deflateras till dagens penningvärde. */
+  showReal: boolean;
   /** Manuell ISK-andel (0–100 %). undefined ⇒ skatteneutral autokalibrering. */
   manualIskSharePct?: number;
 }
@@ -40,10 +44,14 @@ export const defaultKapitalmotorUiInput: KapitalmotorUiInput = {
   volatility: defaultVolatility,
   maxLtvOfTotal: 0.6,
   monthlySavings: 0,
+  inflation: 0.02,
+  showReal: false,
 };
 
 const serialize = (input: KapitalmotorUiInput): string =>
   btoa(encodeURIComponent(JSON.stringify(input)));
+
+export const serializeKapitalmotor = serialize;
 
 const parse = (s: string): KapitalmotorUiInput | null => {
   try {

@@ -1,18 +1,25 @@
 import { useAtom } from "@effect/atom-react";
 import { defaultStrategyInput } from "@sparstrategi/engine";
 import { Button } from "@sparstrategi/ui/components/button";
-import { PlusIcon, Share2Icon } from "lucide-react";
+import { BookmarkIcon, PlusIcon, Share2Icon } from "lucide-react";
 import { useEffect } from "react";
 import { toast } from "sonner";
 
 import { AssumptionsBar } from "@/components/jamfor/assumptions-bar";
+import { GoalPanel } from "@/components/jamfor/goal-panel";
 import { JamforChart } from "@/components/jamfor/jamfor-chart";
 import { JamforKpis } from "@/components/jamfor/jamfor-kpis";
 import { JamforTable } from "@/components/jamfor/jamfor-table";
 import { StrategyColumn } from "@/components/jamfor/strategy-column";
 import { useRoute } from "@/lib/router";
+import { saveScenario } from "@/lib/saved";
 import { templateById } from "@/lib/templates";
-import { comparisonInputAtom, comparisonShareUrl, fromTemplate } from "@/state/comparison";
+import {
+  comparisonInputAtom,
+  comparisonShareUrl,
+  fromTemplate,
+  serializeComparison,
+} from "@/state/comparison";
 
 export function JamforView() {
   const [input, setInput] = useAtom(comparisonInputAtom);
@@ -51,18 +58,35 @@ export function JamforView() {
           <h1 className="text-2xl font-bold">{template.title}</h1>
           <p className="text-sm text-muted-foreground">{template.question}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleShare}>
-          <Share2Icon className="size-3.5" />
-          Dela
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const name = window.prompt("Namn på jämförelsen?", template.title);
+              if (!name) return;
+              saveScenario({
+                name,
+                kind: "jamfor",
+                payload: serializeComparison(input),
+                templateId: input.templateId,
+              });
+              toast.success("Jämförelse sparad — finns på startsidan");
+            }}
+          >
+            <BookmarkIcon className="size-3.5" aria-hidden />
+            Spara
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleShare}>
+            <Share2Icon className="size-3.5" aria-hidden />
+            Dela
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
         <AssumptionsBar lockDeposits={template.lockDeposits} />
-        <div
-          className="grid gap-4"
-          style={{ gridTemplateColumns: `repeat(${input.strategies.length}, minmax(0, 1fr))` }}
-        >
+        <div className="grid grid-cols-1 gap-4 md:grid-flow-col md:auto-cols-fr">
           {input.strategies.map((_, i) => (
             <StrategyColumn key={i} index={i} />
           ))}
@@ -72,6 +96,7 @@ export function JamforView() {
             <PlusIcon className="size-3.5" /> Lägg till strategi
           </Button>
         ) : null}
+        <GoalPanel />
         <JamforKpis />
         <JamforChart />
         <div className="rounded-xl border bg-card p-5">

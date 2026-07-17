@@ -1,12 +1,20 @@
 import { useAtomValue } from "@effect/atom-react";
 
 import { STRATEGY_COLORS } from "@/components/jamfor/jamfor-chart";
+import { deflate } from "@/lib/deflate";
 import { fmtKr } from "@/lib/format";
-import { comparisonResultsAtom } from "@/state/comparison";
+import { comparisonInputAtom, comparisonResultsAtom } from "@/state/comparison";
 
 export function JamforKpis() {
+  const input = useAtomValue(comparisonInputAtom);
   const results = useAtomValue(comparisonResultsAtom);
   if (results.length === 0) return null;
+
+  const { inflation, showReal } = input.display;
+  const horizon = input.assumptions.horizonYears;
+  // Slutvärden deflateras till dagens penningvärde; ackumulerade flöden
+  // (avgifter, skatt) är summor över olika år och lämnas nominella.
+  const adjustFinal = (v: number) => (showReal ? deflate(v, horizon, inflation) : v);
 
   const best = results.reduce((a, b) =>
     b.final.valueAfterRealization > a.final.valueAfterRealization ? b : a,
@@ -20,7 +28,7 @@ export function JamforKpis() {
 
   return (
     <div className="space-y-3">
-      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${results.length}, 1fr)` }}>
+      <div className="grid grid-cols-1 gap-3 md:grid-flow-col md:auto-cols-fr">
         {results.map((r, i) => (
           <div key={r.name + i} className="rounded-xl border bg-card p-4">
             <div
@@ -29,12 +37,16 @@ export function JamforKpis() {
             >
               {r.name}
             </div>
-            <div className="mt-1 text-lg font-bold">{fmtKr(r.final.valueAfterRealization)}</div>
-            <div className="text-xs text-muted-foreground">efter skatt vid försäljning</div>
+            <div className="mt-1 text-lg font-bold">
+              {fmtKr(adjustFinal(r.final.valueAfterRealization))}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              efter skatt vid försäljning{showReal ? ", dagens penningvärde" : ""}
+            </div>
             <dl className="mt-3 space-y-1 text-xs">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Värde före realisation</dt>
-                <dd>{fmtKr(r.final.value)}</dd>
+                <dd>{fmtKr(adjustFinal(r.final.value))}</dd>
               </div>
               {r.final.dividendsReceived > 0 ? (
                 <div className="flex justify-between">
@@ -66,8 +78,8 @@ export function JamforKpis() {
       </div>
       {results.length > 1 && diff > 0 ? (
         <div className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-2.5 text-xs text-emerald-300">
-          Skillnad: {fmtKr(diff)} ({(diffPct * 100).toFixed(0)} %) mer i {best.name} än i{" "}
-          {worst.name}, efter skatt vid försäljning.
+          Skillnad: {fmtKr(adjustFinal(diff))} ({(diffPct * 100).toFixed(0)} %) mer i {best.name}{" "}
+          än i {worst.name}, efter skatt vid försäljning.
         </div>
       ) : null}
     </div>

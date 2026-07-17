@@ -89,6 +89,25 @@ export function KapitalmotorInputPanel() {
         max={50}
       />
       <NumberField
+        label="Inflation (%/år)"
+        value={input.inflation * 100}
+        onChange={(v) => set("inflation", Math.max(0, v) / 100)}
+        min={0}
+        max={10}
+        step={0.1}
+        suffix="%"
+      />
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id="km-show-real"
+          checked={input.showReal}
+          onCheckedChange={(c) => set("showReal", c === true)}
+        />
+        <Label htmlFor="km-show-real" className="text-xs">
+          Visa i dagens penningvärde
+        </Label>
+      </div>
+      <NumberField
         label="Kapitalvinstskatt, AF vid realisation (%)"
         value={input.capitalGainsTaxRate * 100}
         onChange={(v) => set("capitalGainsTaxRate", v / 100)}
@@ -99,10 +118,13 @@ export function KapitalmotorInputPanel() {
       />
       <div className="flex items-center gap-2 pt-2">
         <Checkbox
+          id="km-extract-dividends"
           checked={input.extractDividends}
           onCheckedChange={(c) => set("extractDividends", c === true)}
         />
-        <Label className="text-xs">Holdingbolag: ta ut gränsbelopp som utdelning varje år</Label>
+        <Label htmlFor="km-extract-dividends" className="text-xs">
+          Holdingbolag: ta ut gränsbelopp som utdelning varje år
+        </Label>
       </div>
 
       <div className="space-y-2 border-t pt-3">

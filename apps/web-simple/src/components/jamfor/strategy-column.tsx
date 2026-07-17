@@ -7,6 +7,7 @@ import { NumberField } from "@sparstrategi/ui/components/number-field";
 import { XIcon } from "lucide-react";
 
 import { STRATEGY_COLORS } from "@/components/jamfor/jamfor-chart";
+import { PctField } from "@/components/pct-field";
 import { templateById } from "@/lib/templates";
 import { comparisonInputAtom } from "@/state/comparison";
 
@@ -16,27 +17,6 @@ const ACCOUNT_LABELS: Record<ComparisonAccountType, string> = {
   kf: "KF",
   none: "Skattefritt",
 };
-
-/** Ett procentfält: UI i %, state i decimal. */
-function PctField(props: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  max?: number;
-  step?: number;
-}) {
-  return (
-    <NumberField
-      label={props.label}
-      value={props.value * 100}
-      onChange={(v) => props.onChange(v / 100)}
-      min={0}
-      max={props.max ?? 30}
-      step={props.step ?? 0.1}
-      suffix="%"
-    />
-  );
-}
 
 export function StrategyColumn({ index }: { index: number }) {
   const [input, setInput] = useAtom(comparisonInputAtom);
@@ -93,10 +73,13 @@ export function StrategyColumn({ index }: { index: number }) {
         return (
           <div key={key} className="flex items-center gap-2">
             <Checkbox
+              id={`reinvest-${index}`}
               checked={strategy.reinvestDividends}
               onCheckedChange={(c) => set("reinvestDividends", c === true)}
             />
-            <Label className="text-xs">Återinvestera utdelningar</Label>
+            <Label htmlFor={`reinvest-${index}`} className="text-xs">
+              Återinvestera utdelningar
+            </Label>
           </div>
         );
       case "foreignWithholdingRate":
