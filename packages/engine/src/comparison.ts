@@ -196,7 +196,23 @@ export function simulateStrategy(
       dividendsReceived += netDividends;
     }
 
-    // 5. Ombalansering (Task 3) infogas här.
+    // 5. Ombalansering: kostnader på omsatt volym; på AF realiseras vinst.
+    const turnover = Math.min(1, s.rebalancesPerYear * s.turnoverShare);
+    if (turnover > 0 && newValue > 0) {
+      const volume = turnover * newValue;
+      const rebalCost =
+        volume * (s.spreadRate + 2 * (s.courtageRate + s.fxFeeRate));
+      newValue -= rebalCost;
+      paidTransactionCosts += rebalCost;
+      if (s.accountType === "af") {
+        const unrealized = Math.max(0, newValue - basis);
+        const realizedGain = turnover * unrealized;
+        const realizedTax = gainsRate * realizedGain;
+        newValue -= realizedTax;
+        basis += realizedGain - realizedTax;
+        paidTax += realizedTax;
+      }
+    }
 
     value = Math.max(0, newValue);
     frictionless =

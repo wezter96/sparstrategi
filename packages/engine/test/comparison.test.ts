@@ -140,3 +140,85 @@ describe("kontoskatt", () => {
     expect(y5.valueAfterRealization).toBeCloseTo(y5.value - y5.latentTax, 6);
   });
 });
+
+describe("transaktionskostnader", () => {
+  test("courtage år 1: 12 månadsköp × 8 innehav × minimicourtage när procentsatsen är lägre", () => {
+    const a = assumptions({ startCapital: 0, monthlySavings: 1_000, horizonYears: 1 });
+    const s: StrategyInput = {
+      ...defaultStrategyInput("aktier"),
+      fundFeeRate: 0,
+      holdingsCount: 8,
+      courtageFlat: 5,
+      courtageRate: 0.0025, // 0,25 % av 125 kr = 0,31 kr < 5 kr ⇒ flat gäller
+    };
+    const r = simulateStrategy(a, s);
+    expect(r.final.paidTransactionCosts).toBeCloseTo(12 * 8 * 5, 6);
+  });
+
+  test("procentcourtage gäller när det överstiger minimicourtaget", () => {
+    const a = assumptions({ startCapital: 1_000_000, monthlySavings: 0, horizonYears: 1 });
+    const s: StrategyInput = {
+      ...defaultStrategyInput("stort köp"),
+      fundFeeRate: 0,
+      holdingsCount: 1,
+      courtageFlat: 5,
+      courtageRate: 0.0025, // 0,25 % av 1 Mkr = 2 500 kr > 5 kr
+    };
+    const r = simulateStrategy(a, s);
+    expect(r.rows[0]!.paidTransactionCosts).toBeCloseTo(2_500, 6);
+  });
+
+  test("ombalanseringskostnad är linjär i antal ombalanseringar (ettårshorisont)", () => {
+    const a = assumptions({ startCapital: 1_000_000, horizonYears: 1 });
+    const mk = (n: number): StrategyInput => ({
+      ...defaultStrategyInput("rebal"),
+      fundFeeRate: 0,
+      priceGrowth: 0,
+      rebalancesPerYear: n,
+      turnoverShare: 0.1,
+      spreadRate: 0.001,
+      courtageRate: 0.0005,
+    });
+    const cost = (n: number) => simulateStrategy(a, mk(n)).final.paidTransactionCosts;
+    const c0 = cost(0); // startköpets courtage, ingen ombalansering
+    expect(cost(2) - c0).toBeCloseTo(2 * (cost(1) - c0), 4);
+  });
+
+  test("AF-ombalansering med full omsättning realiserar allt: latent skatt 0, basis = value", () => {
+    const a = assumptions({ startCapital: 1_000_000, horizonYears: 10 });
+    const s: StrategyInput = {
+      ...defaultStrategyInput("af full rebal"),
+      accountType: "af",
+      fundFeeRate: 0,
+      rebalancesPerYear: 1,
+      turnoverShare: 1,
+    };
+    const r = simulateStrategy(a, s);
+    for (const row of r.rows.slice(1)) {
+      expect(row.latentTax).toBeCloseTo(0, 4);
+      expect(row.basis).toBeCloseTo(row.value, 4);
+    }
+    // Årlig realisering är dyrare än att skjuta upp skatten:
+    const deferred = simulateStrategy(a, { ...s, rebalancesPerYear: 0, turnoverShare: 0 });
+    expect(deferred.final.valueAfterRealization).toBeGreaterThan(
+      r.final.valueAfterRealization,
+    );
+  });
+
+  test("ISK-ombalansering kostar courtage/spread men utlöser ingen skatt", () => {
+    const a = assumptions({ startCapital: 1_000_000, horizonYears: 1 });
+    const s: StrategyInput = {
+      ...defaultStrategyInput("isk rebal"),
+      fundFeeRate: 0,
+      priceGrowth: 0,
+      rebalancesPerYear: 1,
+      turnoverShare: 0.2,
+      spreadRate: 0.001,
+    };
+    const r = simulateStrategy(a, s);
+    expect(r.final.paidTransactionCosts).toBeGreaterThan(0);
+    // Enda skatten är schablon.
+    const noRebal = simulateStrategy(a, { ...s, rebalancesPerYear: 0, turnoverShare: 0 });
+    expect(r.final.paidTax).toBeCloseTo(noRebal.final.paidTax, 6);
+  });
+});
