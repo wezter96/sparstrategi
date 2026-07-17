@@ -49,6 +49,8 @@ export interface StrategyInput {
   /** Endast DCA-mallen: åsidosätter gemensamma insättningsantaganden. */
   startCapitalOverride?: number;
   monthlySavingsOverride?: number;
+  /** Antal år utan månadsinsättningar (0 = spara från år 1). Mallen "tidigt". */
+  savingsStartYear?: number;
 }
 
 export interface StrategyYear {
@@ -152,9 +154,10 @@ export function simulateStrategy(
   const rows: StrategyYear[] = [mkRow(0)];
 
   for (let year = 1; year <= a.horizonYears; year++) {
-    // 1. Insättningar
-    const deposits = 12 * monthly;
-    const depositCost = 12 * tradeCost(monthly);
+    // 1. Insättningar (0 t.o.m. savingsStartYear)
+    const monthlyThisYear = year > (s.savingsStartYear ?? 0) ? monthly : 0;
+    const deposits = 12 * monthlyThisYear;
+    const depositCost = 12 * tradeCost(monthlyThisYear);
     const netDeposits = deposits - depositCost;
     paidTransactionCosts += depositCost;
 

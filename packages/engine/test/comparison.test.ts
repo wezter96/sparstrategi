@@ -247,3 +247,23 @@ describe("compareStrategies och insättningsöverstyrning", () => {
     expect(lump!.final.value).toBeGreaterThan(dca!.final.value);
   });
 });
+
+describe("savingsStartYear", () => {
+  test("inga insättningar t.o.m. startåret; därefter identiskt med en kortare sparhorisont", () => {
+    const a = assumptions({ startCapital: 0, monthlySavings: 1_000, horizonYears: 10 });
+    const delayed = simulateStrategy(a, frictionFree({ savingsStartYear: 5 }));
+    expect(delayed.rows[5]!.value).toBe(0);
+    expect(delayed.rows[5]!.frictionlessValue).toBe(0);
+    const early = simulateStrategy(
+      assumptions({ startCapital: 0, monthlySavings: 1_000, horizonYears: 5 }),
+      frictionFree(),
+    );
+    expect(delayed.final.value).toBeCloseTo(early.final.value, 6);
+  });
+
+  test("default (utan fältet) sparar från år 1", () => {
+    const a = assumptions({ startCapital: 0, monthlySavings: 1_000, horizonYears: 1 });
+    const r = simulateStrategy(a, frictionFree());
+    expect(r.rows[1]!.value).toBeGreaterThan(0);
+  });
+});
