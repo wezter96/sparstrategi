@@ -5,10 +5,10 @@ import UserMenu from "./user-menu";
 
 export default function Header() {
   const links = [
-    { to: "/", label: "Home" },
+    { to: "/", label: "Hem" },
     { to: "/kapitalmotor", label: "Kapitalmotor" },
     { to: "/scenarios", label: "Scenarier" },
-    { to: "/dashboard", label: "Dashboard" },
+    { to: "/dashboard", label: "Översikt" },
   ] as const;
 
   return (

@@ -1,49 +1,9 @@
 import { useAtom } from "@effect/atom-react";
 import { Checkbox } from "@sparstrategi/ui/components/checkbox";
-import { Input } from "@sparstrategi/ui/components/input";
 import { Label } from "@sparstrategi/ui/components/label";
+import { NumberField } from "@sparstrategi/ui/components/number-field";
 
 import { kapitalmotorInputAtom, type KapitalmotorUiInput } from "@/state/kapitalmotor";
-
-function NumberField(props: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  min?: number;
-  max?: number;
-  step?: number;
-  suffix?: string;
-}) {
-  return (
-    <div className="space-y-1">
-      <Label className="text-xs text-muted-foreground">{props.label}</Label>
-      <div className="flex items-center gap-2">
-        <Input
-          type="number"
-          value={Number.isFinite(props.value) ? +props.value.toFixed(4) : 0}
-          min={props.min}
-          max={props.max}
-          step={props.step ?? 1}
-          onChange={(e) => props.onChange(Number(e.target.value))}
-        />
-        {props.suffix ? (
-          <span className="text-xs text-muted-foreground">{props.suffix}</span>
-        ) : null}
-      </div>
-      {props.min !== undefined && props.max !== undefined ? (
-        <input
-          type="range"
-          className="w-full accent-primary"
-          value={props.value}
-          min={props.min}
-          max={props.max}
-          step={props.step ?? 1}
-          onChange={(e) => props.onChange(Number(e.target.value))}
-        />
-      ) : null}
-    </div>
-  );
-}
 
 export function KapitalmotorInputPanel() {
   const [input, setInput] = useAtom(kapitalmotorInputAtom);
