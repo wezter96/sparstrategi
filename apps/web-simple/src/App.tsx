@@ -3,6 +3,7 @@ import { Toaster } from "@sparstrategi/ui/components/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useView } from "@/lib/router";
 import { KapitalmotorView } from "@/views/kapitalmotor";
+import { StartView } from "@/views/start";
 
 export default function App() {
   const view = useView();
@@ -15,9 +16,11 @@ export default function App() {
     >
       {view === "kapitalmotor" ? (
         <KapitalmotorView />
+      ) : view === "start" ? (
+        <StartView />
       ) : (
-        // Task 6 ersätter med <StartView />, Task 8 lägger till "jamfor"-grenen.
-        <KapitalmotorView />
+        // Task 8: <JamforView />
+        <StartView />
       )}
       <Toaster richColors />
     </ThemeProvider>
