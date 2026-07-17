@@ -6,6 +6,12 @@ import { NumberField } from "@sparstrategi/ui/components/number-field";
 
 import { kapitalmotorInputAtom, type KapitalmotorUiInput } from "@/state/kapitalmotor";
 
+/** Reglagets max: basintervall för vanliga belopp, men skriver man in mer manuellt
+ * växer maxet till nästa tiopotens ≥ värdet (stabilt under dragning — 10× värdet
+ * direkt skulle ge rundgång: värdet höjer maxet som höjer värdet). */
+const dynamicMax = (value: number, baseMax: number): number =>
+  value > baseMax ? 10 ** Math.ceil(Math.log10(value)) : baseMax;
+
 export function KapitalmotorInputPanel() {
   const [input, setInput] = useAtom(kapitalmotorInputAtom);
   const set = <K extends keyof KapitalmotorUiInput>(key: K, value: KapitalmotorUiInput[K]) =>
@@ -18,16 +24,16 @@ export function KapitalmotorInputPanel() {
         label="Eget kapital, grundförutsättning (kr)"
         value={input.equity}
         onChange={(v) => set("equity", v)}
-        min={1_000_000}
-        max={10_000_000_000}
-        step={1_000_000}
+        min={0}
+        max={dynamicMax(input.equity, 100_000_000)}
+        step={100_000}
       />
       <NumberField
         label="Löpande sparande (kr/mån)"
         value={input.monthlySavings}
         onChange={(v) => set("monthlySavings", v)}
         min={0}
-        max={10_000_000}
+        max={dynamicMax(input.monthlySavings, 100_000)}
         step={1_000}
       />
       <NumberField
