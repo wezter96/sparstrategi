@@ -14,6 +14,7 @@ const ACCOUNT_LABELS: Record<ComparisonAccountType, string> = {
   isk: "ISK",
   af: "AF (depå)",
   kf: "KF",
+  none: "Skattefritt",
 };
 
 /** Ett procentfält: UI i %, state i decimal. */
@@ -142,6 +143,14 @@ export function StrategyColumn({ index }: { index: number }) {
         return (
           <NumberField key={key} label="Börjar spara efter år" value={strategy.savingsStartYear ?? 0} onChange={(v) => set("savingsStartYear", Math.max(0, Math.round(v)))} min={0} max={40} />
         );
+      case "leverageOfEquity":
+        return (
+          <PctField key={key} label="Belåning (% av eget kapital)" value={strategy.leverageOfEquity ?? 0} onChange={(v) => set("leverageOfEquity", v)} max={100} step={5} />
+        );
+      case "loanRate":
+        return (
+          <PctField key={key} label="Låneränta (%/år)" value={strategy.loanRate ?? 0} onChange={(v) => set("loanRate", v)} max={15} step={0.1} />
+        );
       default:
         return null;
     }
@@ -162,6 +171,8 @@ export function StrategyColumn({ index }: { index: number }) {
     "turnoverShare",
     "spreadRate",
     "savingsStartYear",
+    "leverageOfEquity",
+    "loanRate",
     ...(template.lockDeposits
       ? []
       : (["startCapitalOverride", "monthlySavingsOverride"] as const)),

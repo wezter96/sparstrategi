@@ -174,6 +174,43 @@ export const templates: ComparisonTemplate[] = [
     lockDeposits: false,
   },
   {
+    id: "belaning",
+    title: "Belånat eller obelånat?",
+    question: "Samma portfölj på ISK — med och utan 20 % belåning.",
+    explainer:
+      "Belåningen ökar exponeringen: avkastningen räknas på eget kapital plus lån, medan " +
+      "räntan bara kostar på lånet. Så länge avkastningen överstiger räntan växer den belånade " +
+      "portföljen snabbare — och ränteavdraget mildrar dessutom schablonskatten. Men jämförelsen " +
+      "är deterministisk: den visar inte risken. I en krasch faller den belånade portföljen " +
+      "mer än marknaden, och vid hög belåning kan banken tvångssälja. Utforska kraschscenarier " +
+      "i Kapitalmotorns stresstest och Monte Carlo.",
+    assumptions: { startCapital: 500_000, monthlySavings: 3_000, horizonYears: 20 },
+    strategies: [
+      { ...s("Obelånat") },
+      { ...s("Belånat 20 %"), leverageOfEquity: 0.2, loanRate: 0.04 },
+    ],
+    highlightedFields: ["leverageOfEquity", "loanRate"],
+    lockDeposits: true,
+  },
+  {
+    id: "amortera",
+    title: "Amortera eller investera?",
+    question: "Extra tusenlappar in i marknaden — eller ner i bolånet?",
+    explainer:
+      "Amortering är en garanterad, skattefri avkastning lika med din bolåneränta efter " +
+      "ränteavdrag (3,5 % × 0,7 ≈ 2,45 %). Investering på ISK förväntas ge mer — men är " +
+      "osäker och schablonbeskattas. Jämförelsen är deterministisk och fångar inte risken: " +
+      "amorteringens avkastning är säker, marknadens är det inte. Justera \"kurstillväxten\" " +
+      "på amorteringsstrategin till din egen boränta × 0,7.",
+    assumptions: { startCapital: 0, monthlySavings: 3_000, horizonYears: 20 },
+    strategies: [
+      { ...s("Investera (ISK)") },
+      { ...s("Amortera"), accountType: "none", priceGrowth: 0.0245, fundFeeRate: 0 },
+    ],
+    highlightedFields: ["priceGrowth", "accountType"],
+    lockDeposits: true,
+  },
+  {
     id: "egen",
     title: "Egen jämförelse",
     question: "Börja från ett blankt läge och ställ in allt själv.",
